@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+
+    <package name="order" extends="struts-global" >
+        <!--添加订单的Action-->
+        <action name="orderAdd" class="addOrders" method="addOrder">
+            <result type="redirectAction">orderShow</result>
+            <result name="input">/teacher/orderAdd.jsp</result>
+        </action>
+        <!--展示订单列表的Action-->
+        <action name="orderShow" class="showOrder" >
+            <result name="success">/teacher/orderList.jsp</result>
+        </action>
+
+        <!--根据订单Id展示订单详情-->
+        <action name="orderDetailShow" class="showOrder" method="showOrder">
+            <result>/teacher/orderDetailList.jsp</result>
+        </action>
+
+        <action name="orderOne" class="showOrder" method="queryOne">
+            <result >/teacher/orderOneList.jsp</result>
+            <result name="input">/teacher/orderList.jsp</result>
+        </action>
+
+        <action name="orderOnes" class="showOrder" method="queryOneById">
+            <result >/teacher/orderOneEdit.jsp</result>
+        </action>
+
+        <action name="editOne" class="editOrder" method="edit">
+            <result type="redirectAction">orderShow</result>
+        </action>
+
+        <action name="deleteOne" class="showOrder" method="delete">
+            <result type="redirectAction">orderShow</result>
+        </action>
+    </package>
+</struts>

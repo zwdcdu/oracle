@@ -1,0 +1,161 @@
+﻿【示例10-1】选择部分或者全部列,行操作。
+选择全部列和行：
+SQL> SELECT * FROM employees;
+
+选择部分列和行：
+SQL> SELECT employee_id,first_name,job_id,salary,manager_id,
+department_id FROM employees WHERE department_id=60;
+
+【示例10-2】WHERE子句操作。
+查询指定行(manager_id=101)的记录：
+SQL> SELECT employee_id,first_name,job_id,manager_id,department_id
+FROM employees WHERE manager_id=101;
+
+查询manager_id值为空的记录：
+SQL> SELECT employee_id,first_name,job_id,manager_id,department_id
+FROM employees WHERE manager_id IS NULL;
+
+查询manager_id值在102到105之间的记录：
+SQL> SELECT employee_id,first_name,job_id,manager_id,department_id
+FROM employees WHERE manager_id BETWEEN 102 AND 105;
+
+查询manager_id值为103和123的记录：
+SQL> SELECT employee_id,first_name,job_id,manager_id,department_id 
+FROM employees WHERE manager_id IN (103,123);
+
+查询first_name第1个字母为'J',第2个字母任意,第3个字母为's'的所有记录：
+SQL> SELECT employee_id,first_name,job_id,manager_id,department_id
+FROM employees WHERE first_name LIKE 'J_s%';
+
+【示例10-3】列算术运算查询。
+查询(department_id=100)人员的薪水,并以“万”为单位显示查询结果：
+SQL> SELECT employee_id,first_name,ROUND(salary/10000,2)
+AS "薪水(万)",department_id FROM employees 
+WHERE department_id='100';
+
+查询(department_id=100)人员的薪水,并以“万”为单位显示查询结果：
+SQL> SELECT employee_id,first_name,ROUND(salary/10000,2)
+AS "薪水(万)",department_id FROM employees 
+WHERE department_id='100';
+
+查询管理员管理部门ID为20(Marketing)、80(Sales)、60(IT)的人数：
+SQL> SELECT DISTINCT manager_id AS 管理员ID,department_id AS 部门ID,
+SUM(CASE WHEN department_id=20 THEN 1 ELSE 0 END)AS Marketing人数,
+SUM(CASE WHEN department_id=80 THEN 1 ELSE 0 END)AS Sales人数,
+SUM(CASE WHEN department_id=60 THEN 1 ELSE 0 END)as IT人数
+FROM employees  WHERE department_id IN(20,80,60)
+GROUP BY manager_id,department_id;
+
+【示例10-4】禁止重复行查询。
+在employees表中查询所有不同的部门ID：
+SQL> SELECT DISTINCT department_id FROM employees 
+WHERE department_id IS NOT NULL;
+
+【示例10-5】排序查询。
+在employees表中查询(department_id=60)所有人员的薪水,并按降序输出结果：
+SQL> SELECT employee_id,first_name,salary from employees 
+WHERE department_id=60 ORDER BY salary DESC;
+
+【示例10-6】多表查询示例一。
+查询employees表和departments表的笛卡尔积(employees中的每一条记录与departments表中的每一条记录连接成一条新记录)：
+SQL> SELECT COUNT(*)FROM employees,departments;
+
+等值查询,查询所有员工的部门名称(员工所在部门在departments表中有的,才连接成一条新的记录,即员工有部门的才连接)：
+SQL> SELECT emp.employee_id,emp.first_name,dep.department_name 
+FROM employees emp,departments dep 
+WHERE emp.department_id=dep.department_id;
+
+左连接查询,查询所有员工的部门名称(如果员工所在部门在departments表中没有,也将连接成一条新的记录,门部名称为NULL,即左表记录将全部出现在查询结果中)：
+SQL> SELECT emp.employee_id,emp.first_name,dep.department_name 
+FROM employees emp,departments dep 
+WHERE emp.department_id=dep.department_id(+);
+
+右连接查询,查询所有部门对应的员工信息(如果某部门没有员工,将以空值显示员工信息,即右表记录将全部出现在查询结果中)：
+SQL> SELECT emp.employee_id,emp.first_name,dep.department_name 
+FROM employees emp,departments dep 
+WHERE emp.department_id(+)=dep.department_id;
+
+自连接查询(指同一张表的连接查询),查询所有员工的管理员姓名：
+SQL> SELECT e1.employee_id 员工编号,e1.first_name 员工姓名,
+e2.first_name 管理员姓名  FROM employees e1,employees e2 
+WHERE e1.manager_id=e2.employee_id;
+
+【示例10-7】多表查询示例二。
+--交叉连接
+SQL> SELECT * FROM employees CROSS JOIN departments; 
+--自然连接
+SQL> SELECT * FROM employees NATURAL JOIN departments;
+--使用JOIN…USING子句
+SQL> SELECT * FROM employees JOIN departments USING(department_id); 
+--使用JOIN…ON子句
+SQL> SELECT * FROM employees e JOIN departments d 
+ON e.department_id = d.department_id;
+--左(外)连接
+SQL> SELECT * FROM employees e LEFT OUTER JOIN departments d 
+ON e.department_id= d.department_id;
+--右(外)连接
+SQL> SELECT * FROM employees e RIGHT OUTER JOIN departments d 
+ON e.department_id =d.department_id; 
+--全(外)连接
+SQL> SELECT * FROM employees e FULL OUTER JOIN departments d 
+ON e.department_id= d.department_id;
+
+【示例10-8】单行子查询。
+查询所有薪水高于员工(employee_id=108)的员工信息：
+SQL> SELECT employee_id,first_name,salary from employees WHERE 
+salary > (SELECT salary FROM employees WHERE employee_id=108);
+
+【示例10-9】多行子查询。
+查询在job_history表中有过记载的员工信息：
+SQL> SELECT employee_id,first_name,job_id from employees WHERE 
+employee_id IN(SELECT DISTINCT employee_id FROM job_history);
+
+查询员工薪水低于所有部门平均工资的员工信息：
+SQL> SELECT employee_id,first_name,salary from employees WHERE 
+salary < ALL(SELECT AVG(salary)FROM employees 
+GROUP BY department_id);
+
+查询员工薪水高于任意部门平均工资的员工信息：
+SQL> SELECT employee_id,first_name,salary from employees WHERE 
+salary > ANY(SELECT avg(salary)FROM employees 
+GROUP BY department_id);
+
+【示例10-10】Top N查询。
+查询薪水排在前5名的员工信息：
+SQL> SELECT employee_id,first_name,salary FROM(SELECT * 
+FROM employees ORDER BY salary DESC) WHERE ROWNUM<=5;
+SQL> SELECT employee_id,first_name,salary FROM employees 
+ORDER BY salary DESC FETCH FIRST 5 ROWS ONLY;
+
+【示例10-11】分页查询。
+如果每页10条记录,查询第3页(记录编号：21~30)的员工信息：
+SQL> SELECT employee_id,first_name,salary,rn FROM ( 
+ELECT a.*,ROWNUM rn  FROM (SELECT * FROM employees)a )
+WHERE rn BETWEEN 21 AND 30;
+SQL> SELECT employee_id,first_name,salary,rn FROM ( 
+SELECT a.*,ROWNUM rn  FROM (SELECT * FROM employees)a 
+WHERE ROWNUM<=30)WHERE rn >= 21;
+SQL> SELECT /*+ FIRST_ROWS */employee_id,first_name,salary,rn FROM ( 
+SELECT a.*,ROWNUM rn  FROM (SELECT * FROM employees)a 
+WHERE ROWNUM<=30)WHERE rn >= 21;
+SQL> SELECT employee_id,first_name,salary FROM employees 
+OFFSET 10*(3-1)+1 ROWS FETCH NEXT 10 ROWS ONLY;
+
+【示例10-12】递归查询。
+查询管理员编号为108和205管理员所管理的员工：
+SQL> SELECT employee_id,manager_id,first_name from employees
+START WITH manager_id = 108 or manager_id = 205
+CONNECT BY PRIOR employee_id = manager_id;
+
+查询员工编号为101管理员所管理的所有员工(树的顺序排列)：
+SQL> SELECT employee_id,manager_id,first_name,level,CONNECT_BY_ISLEAF 
+FROM employees START WITH employee_id = 101
+CONNECT BY PRIOR employee_id = manager_id;
+
+查询员工编号为101和102管理的所有员工,并显示根节点的信息：
+SQL> SELECT employee_id,manager_id,first_name,
+CONNECT_BY_ROOT(employee_id)root_id ,
+CONNECT_BY_ROOT(first_name)root_name From employees
+START WITH employee_id = 101 or employee_id = 102
+CONNECT BY PRIOR employee_id = manager_id;
+

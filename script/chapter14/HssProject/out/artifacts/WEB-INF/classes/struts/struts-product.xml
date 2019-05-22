@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+
+    <package name="product" extends="struts-global">
+        <!--显示所有商品-->
+        <action name="productListAction" class="products">
+            <result name="success">/teacher/productList.jsp</result>
+        </action>
+
+        <!--根据Id删除商品-->
+        <action name="productdeleteAction" class="products" method="deleteProduct">
+            <result name="success" type="redirectAction">productListAction</result>
+        </action>
+
+        <!--跳转到编辑界面的Action-->
+
+        <action name="toProductAction" class="products" method="redirectShow">
+            <result name="success">/teacher/productShow.jsp</result>
+        </action>
+
+        <!--编辑商品信息的Action-->
+        <action name="productEditAction" class="podduct1">
+            <result name="success" type="redirectAction">productListAction</result>
+            <result name="input">/teacher/productShow.jsp</result>
+        </action>
+
+        <!--添加商品的Action-->
+        <action name="productAddAction" class="com.panda.action.ProductAddAction" method="execute">
+            <result name="success" type="redirectAction">productListAction</result>
+            <result name="input">/teacher/productAdd.jsp</result>
+        </action>
+    </package>
+</struts>

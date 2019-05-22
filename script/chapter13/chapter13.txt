@@ -1,0 +1,216 @@
+﻿【示例13-1】查询所有的数据文件、控制文件和联机重做日志文件
+$ sqlplus / as sysdba
+SQL> SELECT NAME FROM v$datafile
+    UNION ALL
+    SELECT MEMBER as NAME FROM v$logfile
+    UNION ALL
+    SELECT NAME FROM v$controlfile;
+【示例13-2】用户管理备份：备份USERS表空间
+$ sqlplus system/***@pdborcl
+SQL> SELECT file_name FROM dba_data_files WHERE  tablespace_name='USERS';
+SQL> ALTER tablespace users begin backup;
+SQL> !cp /home/oracle/app/oracle/oradata/orcl/pdborcl/SAMPLE_SCHEMA_users01.dbf /home/oracle/SAMPLE_SCHEMA_users01.dbf
+SQL> !cp /home/oracle/app/oracle/oradata/orcl/control01.ctl /home/oracle/control01.ctl
+SQL> SELECT employee_id,salary FROM study.employees WHERE  employee_id=1;
+SQL> commit;
+SQL> ALTER tablespace users end backup;
+SQL> SELECT employee_id,salary FROM study.employees WHERE  employee_id=1;
+SQL> exit
+$ cd /home/oracle/
+$ ls -l SAMPLE_SCHEMA_users01.dbf control01.ctl
+【示例13-3】用户管理备份：完全恢复
+$ sqlplus / as sysdba
+SQL> shutdown immediate
+SQL> !rm /home/oracle/app/oracle/oradata/orcl/pdborcl/SAMPLE_SCHEMA_users01.dbf
+SQL> startup
+SQL> ALTER pluggable database pdborcl open;
+SQL> !cp /home/oracle/SAMPLE_SCHEMA_users01.dbf /home/oracle/app/oracle/oradata/orcl/pdborcl/SAMPLE_SCHEMA_users01.dbf
+SQL> shutdown immediate
+SQL> startup mount
+SQL> recover database;
+SQL> ALTER database open;
+SQL> show pdbs;
+
+最后,观察完全恢复的效果：1号员工的工资确实是最新值50100,而不是备份之前的50000。
+$ sqlplus system/***@pdborcl
+SQL> SELECT employee_id,salary FROM study.employees WHERE  employee_id=1;
+
+【示例13-4】 连接本地数据库,查看所有配置。
+$ rman target / 
+RMAN> show all;
+
+【示例13-5】典型的完整备份和完全恢复案例
+$ rman target /
+RMAN> SHOW ALL;
+RMAN> BACKUP DATABASE;
+RMAN> LIST BACKUP;
+RMAN> host "rm /home/oracle/app/oracle/oradata/orcl/*.dbf";
+RMAN> host "ls /home/oracle/app/oracle/oradata/orcl/*.dbf";
+
+RMAN> SHUTDOWN IMMEDIATE;
+RMAN> SHUTDOWN ABORT;
+RMAN> STARTUP MOUNT;
+RMAN> RESTORE DATABASE;
+RMAN> recover database;
+RMAN> ALTER DATABASE OPEN;
+RMAN> host "ls /home/oracle/app/oracle/oradata/orcl/*.dbf";
+
+13.4.6  实用案例：完全恢复一个PDB
+$ rman target /
+RMAN> SHOW ALL;
+RMAN> BACKUP AS COMPRESSED BACKUPSET DATABASE;
+RMAN> LIST BACKUP;
+RMAN> REPORT OBSOLETE;
+RMAN> DELETE OBSOLETE;
+RMAN> host "rm /home/oracle/app/oracle/oradata/orcl/pdborcl/*.dbf";
+RMAN> host "ls /home/oracle/app/oracle/oradata/orcl/pdborcl/*.dbf";
+
+$ sqlplus / as sysdba
+SQL> show pdbs;
+SQL> ALTER SESSION SET CONTAINER =pdborcl;
+SQL> UPDATE hr.jobs SET min_salary=min_salary+10;
+SQL> shutdown immediate;
+SQL> exit
+RMAN> restore pluggable database pdborcl;
+RMAN> recover pluggable database pdborcl;
+RMAN> ALTER pluggable database pdborcl open;
+
+RMAN> backup as compressed backupset database;
+RMAN> list backup;
+RMAN> delete obsolete;
+RMAN> report obsolete;
+
+$ sqlplus hr/***@pdborcl;
+SQL> set time on
+03：15：04 SQL> SELECT job_id,min_salary FROM jobs WHERE  job_id='PR_REP';
+03：15：13 SQL> UPDATE jobs SET min_salary=min_salary+100 WHERE  job_id='PR_REP';
+03：16：51 SQL> commit;
+03：17：00 SQL> UPDATE jobs SET min_salary=min_salary+1000 WHERE  job_id='PR_REP';
+03：17：04 SQL> commit;
+03：17：08 SQL> SELECT job_id,min_salary FROM jobs WHERE  job_id='PR_REP';
+03：19：00 SQL> exit
+
+
+$ sqlplus / as sysdba
+SQL> ALTER SESSION SET CONTAINER =pdborcl;
+SQL> shutdown immediate;
+SQL> exit
+
+ 关闭PDBORCL之后,就可以回到RMAN中做数据库的不完全恢复了：
+RMAN> restore pluggable database pdborcl until time "to_date('2017-04-28 03：16：55','yyyy-mm-dd hh24：mi：ss')";
+RMAN> recover pluggable database pdborcl until time "to_date('2017-04-28 03：16：55','yyyy-mm-dd hh24：mi：ss')";
+RMAN> ALTER pluggable database pdborcl open resetlogs;
+
+打开数据库成功之后,看看数据是否恢复到了t1时刻：
+$ sqlplus hr/***@pdborcl;
+SQL> SELECT job_id,min_salary FROM jobs WHERE  job_id='PR_REP';
+
+
+【示例13-6】使用run批处理备份
+$ rman target /
+RMAN> run
+ {
+   configure retention policy to recovery window of 8 days;
+   configure controlfile autobackup on;
+   allocate channel ch1 device type disk;
+   backup as compressed backupset incremental level 0 database ;
+   release channel ch1;
+ }
+
+【示例13-7】打开Flashback功能,并查询相关参数
+$ sqlplus / as sysdba
+SQL> ALTER database flashback on;
+SQL> show parameter db_recovery
+SQL> show parameter db_flashback
+ 
+【示例13-8】闪回数据库
+$ sqlplus system/***@pdborcl
+SQL> set time on
+08：56：57 SQL> SELECT job_id,min_salary FROM hr.jobs WHERE  job_id='PR_REP';
+08：57：01 SQL> UPDATE hr.jobs SET min_salary=min_salary+100;
+08：57：06 SQL> commit;
+08：57：10 SQL> SELECT job_id,min_salary FROM hr.jobs WHERE  job_id='PR_REP';
+08：57：14 SQL>exit
+
+可以看出,在时间点“08：57：06”将MIN_SALARY的值从4500修改成了4600,现在我们将通过Flashback Database命令把这个值恢复回4500,恢复的时间点是“08：56：57”。首先以sys用户登录,恢复的过程必须按下面的顺序依次完成：
+$ sqlplus / as sysdba
+SQL> shutdown immediate
+SQL> startup mount
+SQL> flashback database to timestamp to_timestamp('2017-04-28 08：56：57','yyyy-mm-dd hh24：mi：ss');
+SQL> ALTER database open resetlogs;
+SQL> exit;
+恢复完成后,查询一下MIN_SALARY的值是否恢复到了4500：
+$ sqlplus system/***@pdborcl
+SQL> SELECT job_id,min_salary FROM hr.jobs WHERE  job_id='PR_REP';
+可以看出,恢复成功。
+
+【示例13-9】闪回表
+本例以HR身份登录,修改表JOBS,然后闪回到修改之前的状态。
+$ sqlplus hr/***@pdborcl
+SQL> ALTER table jobs enable row movement;
+SQL> set time on
+15：26：34 SQL> UPDATE hr.jobs SET min_salary=min_salary+10;
+15：26：45 SQL> commit;
+15：26：47 SQL> SELECT * FROM hr.jobs WHERE  rownum<3;
+SQL> flashback table jobs to timestamp  to_timestamp('2017-04-28 15：26：33','yyyy-mm-dd hh24：mi：ss');
+SQL> SELECT * FROM hr.jobs WHERE  rownum<3;
+SQL>exit
+
+【示例13-10】删除表并恢复。
+本例先创建一个表MYJOBS,然后删除这个表。
+$ sqlplus hr/***@pdborcl
+SQL> CREATE TABLE myjobs as SELECT * FROM jobs;
+SQL> SELECT count(*)FROM myjobs;
+SQL> drop table myjobs;
+
+删除表MYJOBS之后,MYJOBS就放到了回收站中,通过查询user_recyclebin视图可以查询该用户回收站中的表,运行flashback table恢复MYJOBS表：
+SQL> SELECT object_name,original_name FROM user_recyclebin;
+SQL> flashback table myjobs to before drop;
+SQL> SELECT count(*)FROM myjobs;
+
+【示例13-11】创建Oracle目录expdir
+本示例创建一个操作系统目录“/home/oracle/expdir”,由SYSTEM用户创建一个对应的Oracle目录expdir,再将它授权给HR和STUDY两个用户,权限是读加写。
+$ mkdir expdir
+$ cd expdir
+$ pwd
+$ sqlplus system/***@pdborcl
+SQL> create or replace directory expdir as '/home/oracle/expdir';
+SQL> GRANT read,write on directory expdir to hr,study;
+Grant succeeded.
+
+【示例13-12】导出用户所有对象
+本示例导出study用户的所有对象,导出文件名是study.dmp,目录是expdir。
+$ expdp study/***@pdborcl directory=expdir dumpfile=study.dmp
+【示例13-13】导入自己的文件
+本示例是用户STUDY导入由自己导出生成的文件。导入之前先由SYSTEM用户删除和重建用户STUDY用户,不然导入的时候因为对象的存在而引发错误：
+$ sqlplus system/***@pdborcl
+SQL> DROP USER study CASCADE;
+SQL> CREATE USER study IDENTIFIED BY 123 default tablespace "USERS" temporary tablespace "TEMP";
+SQL> ALTER USER study quota unlimited on USERS;
+SQL> ALTER USER study quota unlimited on USERS02;
+SQL> GRANT "CONNECT" to study with admin option;
+SQL> GRANT "RESOURCE" to study with admin option;
+SQL> ALTER USER study default role "CONNECT","RESOURCE";
+SQL> GRANT CREATE JOB TO study with admin option;
+SQL> GRANT CREATE VIEW TO study with admin option;
+SQL> GRANT READ,WRITE ON DIRECTORY expdir TO study;
+SQL> exit;
+
+在给用户授权及分配表空间的时候,应该根据导出文件中的对象类型选择不同的权限和存储限额,如果权限没有给够,导入的时候要报错。接下来,STUDY用户可以导入整个方案了。
+$ impdp study/***@pdborcl directory=expdir dumpfile=study.dmp
+
+【示例13-14】导入到其他用户
+expdp和impdp的一个重要用途之一就是做数据迁移,比如将数据迁移到其他服务器或者用户之中。STUDY.DMP中的对象是由STUDY用户创建的,本示例就是将STUDY.DMP导入到STUDY1新用户中,导入成功之后,所有对象的用户会由STUDY变为STUDY1。下面首先创建用户STUDY1：
+$ sqlplus system/***@pdborcl
+SQL> CREATE USER study1 IDENTIFIED BY 123 default tablespace "USERS" temporary SQL> tablespace "TEMP";
+SQL> ALTER USER study1 quota unlimited on USERS;
+SQL> ALTER USER study1 quota unlimited on USERS02;
+SQL> GRANT "CONNECT" to study1 with admin option;
+SQL> GRANT "RESOURCE" to study1 with admin option;
+SQL> ALTER USER study1 default role "CONNECT","RESOURCE";
+SQL> GRANT CREATE JOB TO study1 with admin option;
+SQL> GRANT CREATE VIEW TO study1 with admin option;
+SQL> GRANT READ,WRITE ON DIRECTORY expdir TO study1;
+
+用户STUDY1创建成功后,可以由SYSTEM用户来做导入操作(STUDY用户的权限不够),导入命令中使用参数“remap_schema=study:study1”将STUDY用户对象改变为STUDY1的对象,使用参数“transform=disable_archive_logging：y”在导入时禁用归档日志,提高导入的速度。
+$ impdp system/***@pdborcl directory=expdir dumpfile=study.dmp remap_schema=study:study1 transform=disable_archive_logging:y

@@ -1,0 +1,281 @@
+﻿【示例3-1】设置服务器开启共享服务器模式，调度器数量为3
+$ sqlplus / as sysdba
+SQL> ALTER SYSTEM SET dispatchers="(PROTOCOL=TCP)(dispatchers=3)";
+SQL> ALTER SYSTEM SET max_dispatchers=5;
+SQL> ALTER SYSTEM SET shared_servers = 1;
+SQL> ALTER SYSTEM SET max_shared_servers=20;
+SQL> ALTER SYSTEM SET shared_server_sessions=200;
+SQL> show parameter shared_server
+
+【示例3-2】通过lsnrctl service命令查看数据库的完整工作模式。
+$ lsnrctl service
+
+【示例3-3】指定以专用模式连接数据库
+本例指定以专用模式连接到pdborcl数据库，然后通过v$session查询是否以专用模式连接到数据库。
+$ sqlplus hr/***@localhost/pdborcl:dedicated
+SQL> SELECT server FROM v$session WHERE  SID=(SELECT distinct SID FROM v$mystat);
+
+【示例3-4】指定以共享模式连接数据库
+本例指定以共享模式连接到pdborcl数据库，然后通过v$session查询是否以共享模式连接到数据库。
+$ sqlplus hr/***@localhost/pdborcl:shared
+SQL> SELECT server FROM v$session WHERE  SID=(SELECT DISTINCT SID FROM v$mystat);
+
+【示例3-5】查看专用连接进程
+$ ps -ef | grep oracleorcl
+
+【示例3-6】查看共享连接进程
+$ ps -ef | grep ora_d[0-9].*[_orcl$]
+
+【示例3-7】listener.ora典型内容
+#lsnrctl程序使用的监听器的名称，不是PMON使用的名称
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))
+      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))
+    )
+  )
+#静态注册
+SID_LIST_LISTENER =  
+(SID_LIST =  
+  (SID_DESC =  
+  (GLOBAL_DBNAME = pdborcl)
+  (SID_NAME = orcl)
+  )
+  (SID_DESC =  
+  (GLOBAL_DBNAME = orcl)
+  (SID_NAME = orcl)
+  )
+)
+
+
+【示例3-8】直接设置local_listener
+本例设置自定义local_listener的值为1522：
+$ sqlplus / as sysdba
+SQL> ALTER SYSTEM SET
+LOCAL_LISTENER='(DESCRIPTION_LIST=(DESCRIPTION=(ADDRESS=(PROTOCOL = TCP)(HOST = localhost)(PORT = 1522))(ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))))';
+SQL> ALTER SYSTEM REGISTER;
+除了用“ALTER SYSTEM”命令之外，Oracle允许将监听的信息添加到tnsnames.ora 文件中。下面是tnsnames.ora 文件的部分内容：
+LISTENER1522 =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1522))
+      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))
+    )
+  )
+然后以sys用户登录后运行：
+$ sqlplus / as sysdba
+SQL> ALTER SYSTEM SET LOCAL_LISTENER= LISTENER1522;
+SQL> ALTER SYSTEM REGISTER;
+无论是直接修改或者是间接修改了local_listener，都只是改变了数据库的PMON进程的动态注册方式，lsnrctl进程都不知道这些改变，所以还必须同时改变listener.ora文件的配置，将listener.ora文件的LISTENER配置节修改为相应的内容，然后重启lsnrctl：
+LISTENER =
+  (DESCRIPTION_LIST =
+    (DESCRIPTION =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1522))
+      (ADDRESS = (PROTOCOL = IPC)(KEY = EXTPROC1521))
+    )
+  )
+动态注册和静态注册可以同时并存，这就提供了连接数据库的多种方式：
+$ lsnrctl status
+
+查询结果中，“status READY”表示动态注册的服务。“status UNKNOWN”表示静态注册，这是由于静态注册并不知道服务器是否启动，所以状态为UNKNOWN。
+
+
+【示例3-9】查看数据库静态注册状态
+本例启动监听后看到的监听状态是“未知：status UNKNOWN”，这表示静态注册，因为只有客户端请求连接到实例时候才会去检查实例是否存在。
+$ lsnrctl
+LSNRCTL> start
+LSNRCTL> status
+
+
+【示例3-10】tnsping测试tns名称的连接
+本示例测试tns名称pdborcl_d是否可以解析。输出“OK (0 msec)”表示tnsping成功连通，用时0毫秒。
+$ tnsping pdborcl_d
+$ sqlplus hr/***@pdborcl_d
+SQL>
+
+
+【示例3-11】sqlnet.ora文件内容样例
+这个样例不允许IP地址192.168.0.101登录：
+NAMES.DIRECTORY_PATH=(TNSNAMES,EZCONNECT)
+#NAMES.DEFAULT_DOMAIN=com.cn
+SQLNET.AUTHENTICATION_SERVICES=(NONE,ALL)
+tcp.validnode_checking=yes
+tcp.excluded_nodes=(192.168.0.101)
+
+【示例3-12】SYS用户登录并设置查询格式参数
+本示例不需要输入用户名和密码，以操作系统认证方式登录数据库，但只能在服务器本机登录，不能在远端登录。登录后查询视图v$instance，在查询之前用desc命令描述v$instance的结构，列出所有字段。
+$ sqlplus / as sysdba
+SQL> desc v$instance;
+
+列出v$instance的所有字段后，选择部分字段查询：
+SQL> SELECT instance_number,host_name,version,status FROM v$instance;
+
+可以发现上面的查询语句输出结果有点“乱”，这是因为SQL*Plus的行尺寸太小了，通过show linesize可以看出，默认的linesize只有80个字符。我们可以设置更大一点的值，例如设置为1024，其输出结果如下：
+SQL> show linesize
+linesize 80
+SQL> set linesize 1024
+SQL> SELECT instance_number,host_name,version,status FROM v$instance;
+
+设置了linesize后的结果仍然不太友好，原因是部分列太长，我们可以通过设置列宽来解决这个问题，下面的“col host_name format a20”命令是设置host_name列的宽度为20个字符，最后可以看到，输出结果比较整齐了。
+SQL> col host_name format a20
+SQL> SELECT instance_number,host_name,version,status FROM v$instance;
+
+SQL Plus任务完成后，可以输入exit命令返回到操作系统：
+SQL> exit
+$
+
+
+【示例3-13】使用Easy Connect方式登录
+Oracle样例数据库中有一个用户叫人力资源用户HR(Humen Resource)，现在以Easy Connect方式登录HR，并查看HR用户的Regions。在安装Oracle时我们选择了将样例数据库安装为pdborcl，所以应该这样登录：
+$ sqlplus hr/***@localhost:1521/pdborcl
+SQL> SELECT * FROM regions;
+
+
+【示例3-14】设置TIME参数
+TIME参数为ON时，命令提示符上会显示时间，这有助于观察当前时间。
+SQL> show time
+SQL> set time on
+
+【示例3-15】设置TIMING参数：
+TIMING参数为ON时，会显示命令执行时间长度。 
+SQL> set timing on
+SQL> SELECT count(*)FROM jobs;
+
+
+【示例3-16】通过替换变量JOB查询jobs表。
+本示例第一次是精确查询出job_id等于MK_MAN的工作，第二次是模糊查询出job_id以MK开头的所有工作。
+SQL> define job='MK_MAN'
+SQL> SELECT * FROM jobs WHERE  job_id='&job';
+
+SQL> define job='MK%'
+SQL> SELECT * FROM jobs WHERE  job_id like '&job';
+
+
+【示例3-17】使用accept定义替换变量
+使用accept可以定义替换变量的类型和提示字符串。本例也是定义job替换变量，它的类型是char，在输入值时有一个提示字符串“job_id：”。
+SQL> accept job char prompt 'job_id：'
+SQL> SELECT * FROM jobs WHERE  job_id like '&job';
+
+【示例3-18】绑定变量的使用
+本例定义绑定变量region_id，然后多次给它赋不同的值。
+SQL> var region_id number;
+SQL> EXEC :region_id:= 1;
+SQL> SELECT * FROM regions WHERE  region_id =：region_id;
+
+SQL> EXEC :region_id:= 2;
+SQL> SELECT * FROM regions WHERE  region_id =：region_id;
+SQL> print region_id
+
+
+【示例3-19】编辑并运行PL/SQL程序
+本例定义了一个变量a，然后将1+2的运算结果赋值给a，最后打印输出变量a的值：
+SQL> set serveroutput on
+SQL> DECLARE 
+  a NUMBER;
+  BEGIN
+     a：= 1+2;
+     DBMS_OUTPUT.put_line(a);
+  END;
+  /
+SQL> //
+上例中有两个命令符号，一个是/，它表示运行程序，另一个是//，它表示重复运行刚刚运行过的程序。
+
+
+【示例3-24】给hr授予plustrace角色权限。
+$ sqlplus sys/***@localhost/pdborcl as sysdba
+SQL> @$ORACLE_HOME/sqlplus/admin/plustrce.sql
+SQL> create role plustrace;
+SQL> 
+SQL> GRANT SELECT ON v_$sesstat TO plustrace;
+SQL> GRANT SELECT ON v_$statname TO plustrace;
+SQL> GRANT SELECT ON v_$mystat TO plustrace;
+SQL> GRANT plustrace TO dba WITH ADMIN OPTION;
+SQL> set echo off
+SQL> GRANT plustrace TO hr;
+SQL> GRANT SELECT ON v_$sql TO scott;
+SQL> GRANT SELECT ON v_$sql_plan TO scott;
+SQL> GRANT SELECT ON v_$sql_plan_statistics_all TO scott;
+SQL> GRANT SELECT ON v_$session TO scott;
+SQL> GRANT SELECT ON v_$parameter TO scott;
+
+【示例3-25】查询执行计划
+hr用户有一个员工表employees，有三个字段属性：employee_id、first_name和manager_id，分别表示员工号、姓名、员工的管理员号，其中员工的管理员号也代表一个员工，管理员的信息也在员工表中。本例除了要查询每个员工的这三个属性外，还要查询出管理员的first_name，把这个管理员的first_name命名为manager_name。
+SQL> SET AUTOTRACE ON
+SQL> SELECT e.EMPLOYEE_ID,e.FIRST_NAME,e.MANAGER_ID,
+  (SELECT M.FIRST_NAME FROM employees m WHERE  m.EMPLOYEE_ID=e.MANAGER_ID)
+  AS MANAGER_NAME FROM hr.employees e ORDER BY e.EMPLOYEE_ID;
+
+【示例3-26】更优的查询语句
+SQL> SELECT e.EMPLOYEE_ID,e.FIRST_NAME,e.MANAGER_ID,m.FIRST_NAME 
+  AS MANAGER_NAME FROM employees e,employees m WHERE 
+  e.MANAGER_ID=m.EMPLOYEE_ID(+)ORDER BY e.EMPLOYEE_ID;
+
+
+【示例3-27】显示执行计划的另一种办法
+本例先运行“explain plan for …”SQL语句，再运行语句“SELECT * FROM table(dbms_xplan.display);”也可以显示执行计划。
+SQL> explain plan for SELECT salary FROM hr.employees WHERE first_name like 'Pat';
+
+
+【示例3-28】表的统计信息收集前后的对比
+本示例首先创建一个测试表emp_test，该表来源是hr用户的employees表，emp_test的数据是employees的4倍。
+SQL> CREATE TABLE hr.emp_test as SELECT * FROM hr.employees;
+SQL> INSERT INTO hr.emp_test SELECT * FROM employees;
+SQL> INSERT INTO hr.emp_test SELECT * FROM employees;
+SQL> INSERT INTO hr.emp_test SELECT * FROM employees;
+SQL> SELECT COUNT(*)FROM hr.emp_test WHERE  employee_id=110;
+SQL> explain plan for SELECT * FROM hr.emp_test WHERE  employee_id=110;
+SQL> SELECT * FROM TABLE(dbms_xplan.display);
+
+可以看出，该执行计划的输出行Rows为1，实际情况应该是4行，所以这个执行计划是不准确的，原因就在于没有收集表的统计信息。下面进行统计信息的收集，然后再观察查询计划的变化。
+SQL> EXEC DBMS_STATS.GATHER_TABLE_STATS('HR','EMP_TEST');
+
+SQL> explain plan for SELECT * FROM hr.emp_test WHERE  employee_id=110;
+SQL> SELECT * FROM TABLE(dbms_xplan.display);
+
+可以看出，该执行计划的输出行为4行，实际情况也是4行，所以这个执行计划是准确的，原因就在于收集了表的统计信息。在实际应用中，如果有了这样的计划，就会达到最快的查询速度。
+统计信息也可以被删除，删除统计信息后，再观察查询计划，执行计划仍然是4行。如下操作所示：
+SQL> EXEC DBMS_STATS.DELETE_TABLE_STATS('HR','EMP_TEST');
+SQL> explain plan for SELECT * FROM hr.emp_test WHERE  employee_id=110;
+
+SQL> SELECT * FROM TABLE(dbms_xplan.display);
+
+可以看出，该执行计划的输出行Rows仍为4行，实际情况也是4行，所以这个执行计划是准确的，但这时表emp_test的统计信息已经被删除了，那为什么执行计划没有回到最初的时候呢？这是因为Oracle有动态采样机制，它会对没有统计过的表进行自动采样，尽可能实现最优的查询计划。注意，输出的结果最后有一行注意(Note)：“dynamic statistics used：dynamic sampling (level=2)”，其中level=2表示初始化参数optimizer_dynamic_sampling的值为2。如果optimizer_dynamic_sampling的值为0就会禁用动态采样。
+
+
+【示例3-29】查询表何时被分析过
+本例以HR登录，查看每个表最后被分析的时间LAST_ANALYZED，LAST_ANALYZED为空表示该表未被分析过。
+SQL> col table_name format a30
+SQL> SELECT table_name,last_analyzed FROM user_tables;
+
+
+【示例3-30】让户HR可以进行SQL语句的优化指导。
+首先以system身份登录到pdborcl，然后授权。
+$ sqlplus system/***@localhost/pdborcl
+SQL> GRANT select_catalog_role TO hr;
+SQL> GRANT SELECT ANY DICTIONARY TO hr;
+SQL> GRANT ADVISOR TO hr;
+SQL> GRANT ADMINISTER SQL TUNING SET TO hr;
+
+
+【示例3-31】查看缺省的嵌套循环连接(nested loops join)
+SQL> ALTER SESSION SET optimizer_dynamic_sampling=0;
+SQL> explain plan for SELECT p.product_name
+   FROM oe.order_items o,oe.product_information p
+   WHERE  o.unit_price=15 AND o.quantity>1 AND 
+   p.product_id=o.product_id;
+
+SQL> SELECT * FROM TABLE(dbms_xplan.display());
+上述示例中临时设置了参数动态采样参数optimizer_dynamic_sampling为0,表示暂时不使用动态采样，这样可以稳定得到不采样的查询计划。
+
+
+【示例3-32】查看最终的哈希连接(hash join)
+SQL> ALTER SESSION SET optimizer_dynamic_sampling=2;
+SQL> SELECT /*+ gather_plan_statistics */ p.product_name 
+ FROM oe.order_items o,oe.product_information p
+ WHERE  o.unit_price=15 AND o.quantity>1 AND
+ p.product_id=o.product_id;
+
+SQL> SELECT * FROM TABLE(dbms_xplan.display_cursor(format=>'+adaptive'));
+
+

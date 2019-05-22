@@ -1,0 +1,142 @@
+﻿【示例7-1】查询所有内置角色以及角色包含的系统权限
+$ sqlplus / as sysdba
+SQL> COL role FORMAT a20
+SQL> COL privilege FORMAT a20
+SQL> COL common FORMAT a7
+SQL> SELECT * FROM role_sys_privs;
+SQL> SELECT * FROM role_sys_privs WHERE  role='CONNECT';
+
+
+【示例7-2】创建自定义公共角色c##con_res
+本示例创建新角色c##con_res，并给它分配一些系统权限和角色。这个新角色实际具有了系统角色connect和resource的权限之和。其中set container，create session权限和em_express_all角色属于connect角色，其他属于resource角色。创建完成后，通过dba_sys_privs和dba_role_privs查询c##con_res包含的所有权限和角色。注意，where后面的'C##CON_RES'要大写。另外，由于是创建公共角色，所以本示例必须在CDB中执行。
+$ sqlplus / as sysdba
+SQL> CREATE ROLE c##con_res ;
+SQL> GRANT SET CONTAINER,CREATE SESSION,CREATE TABLE,CREATE CLUSTER,
+    CREATE OPERATOR,CREATE INDEXTYPE,CREATE TYPE,CREATE SEQUENCE,
+    CREATE TRIGGER,CREATE PROCEDURE
+    TO c##con_res container = all;
+SQL> GRANT EM_EXPRESS_ALL TO c##con_res CONTAINER=ALL;
+SQL> COL common FORMAT a7
+SQL> SELECT * FROM dba_sys_privs WHERE  grantee='C##CON_RES';
+SQL> col grantee format a20
+SQL> SELECT * FROM dba_role_privs WHERE  grantee='C##CON_RES';
+
+上述查询之后，可以看出c##con_res内部原来是公共的权限仍然是公共权限(COMMON=YES)，这是因为在GRANT授权的时候使用了选项“CONTAINER=ALL”，否则角色中的权限就只是本地权限了，在其他PDB中不能起作用。紧接上面的操作，下面在CDB和PDB中分别测试COMMON(公共)特性：
+SQL> COL oracle_maintained FORMAT a20
+SQL> COL role FORMAT a20
+SQL> SELECT * FROM dba_roles WHERE role='C##CON_RES';
+SQL> ALTER SESSION SET CONTAINER=pdborcl;
+SQL> SELECT * FROM dba_roles WHERE role='C##CON_RES';
+SQL> SELECT * FROM dba_role_privs WHERE  grantee='C##CON_RES';
+
+【示例7-3】创建自定义本地角色con_res
+本示例在PDBORCL中创建一个本地角色con_res，将connect和resource两个角色赋予它。
+$ sqlplus system/***@pdborcl
+SQL> CREATE ROLE con_res;
+SQL> GRANT connect,resource TO con_res;
+SQL> COL grantee FORMAT a20
+SQL> COL granted_role FORMAT a20
+SQL> COL common FORMAT a7
+SQL> COL role FORMAT a20
+SQL> COL oracle_maintained FORMAT a15
+SQL> SELECT * FROM dba_roles WHERE role='CON_RES';
+SQL> SELECT * FROM dba_role_privs WHERE  grantee ='CON_RES';
+SQL> SELECT * FROM dba_sys_privs WHERE grantee='CON_RES';
+
+【示例7-4】删除自定义本地角色con_res
+$ sqlplus system/***@pdborcl
+SQL> DROP ROLE con_res;
+
+
+【示例7-5】创建公共用户
+本示例创建一个公共用户C##USER1,并将自定义角色C##CON_RES授权给该用户，使得C##USER1可以登录CDB以及所有PDB。
+$sqlplus /  as sysdba
+SQL> CREATE USER c##user1 IDENTIFIED BY 123 CONTAINER=ALL;
+SQL> COL username FORMAT a20
+SQL> SELECT username,con_id FROM cdb_users  WHERE  username = 'C##USER1';
+SQL> GRANT c##con_res TO c##user1 CONTAINER=ALL;
+SQL> ALTER USER c##user1 DEFAULT ROLE c##con_res CONTAINER=ALL;
+SQL> col granted_role format a15
+SQL> col granted format a15
+SQL> SELECT * FROM cdb_role_privs WHERE  grantee='C##USER1';
+
+创建用户c##user1之后,通过cdb_users查询可知，该用户存在于3个数据库中。CON_ID为1的数据库是CDB，CON_ID为3，4表示PDB。如果在创建命令中将CONTAINER=ALL改成CONTAINER=CURRENT，那么创建的公共用户就只属于CDB，对所有的PDB都不起作用。
+通过GRANT将c##con_res公共角色授予c##user1，并设置为默认角色。Oracle中默认角色的意思是当该用户登录时，自动具有DEFAULT ROLE中所包含的权限，其他角色的权限要通过手工运行命令“SET ROLE 角色名”来获得。所以如果将一个角色授予了某个用户的时候，没有设置为默认角色，那么角色就不会自动起作用。接下来，设置用户的默认表空间为system，再对system表空间的空间配额为100M。 
+SQL> ALTER USER c##user1 DEFAULT TABLESPACE system CONTAINER=ALL;
+SQL> ALTER USER c##user1 QUOTA 100M ON system;
+
+注意：也可以设置system 以外的其他表空间为公共用户的表空间，但必须保证每个数据库都有这个相同名称的表空间。
+用户和权限都分配好之后，就要测试新用户登录了。下面测试c##user1登录PDBORCL，登录之后，通过session_privs和session_roles查询当前session包含的权限和角色，然后创建表并插入数据。
+$ sqlplus c##user1/123@pdborcl
+SQL> COL role FORMAT a40
+SQL> SELECT * FROM session_roles;
+SQL> SELECT * FROM session_privs;
+SQL> CREATE TABLE t1 (id number);
+SQL> INSERT INTO t1(id)VALUES(1);
+SQL> col table_name format a20;
+SQL> col tablespace_name format a20;
+SQL> SELECT table_name,tablespace_name FROM user_tables;
+
+
+【示例7-6】授予对象权限
+本示例演示HR用户将表JOBS的SELECT权限和UPDATE权限授予SCOTT用户。SELECT权限只能是整个表的所有列，而UPDATE权限可以是表的是部分列。本例HR仅将jobs.min_salary和jobs.max_salary的UPDATE(修改)权限授予SCOTT，这样SCOTT用户就只能修改HR.JOBS的这两列。授权之后通过查询USER_TAB_PRIVS_MADE和USER_COL_PRIVS_MADE分别查看hr授予出去的对象整体权限和对象的列权限：
+$ sqlplus hr/123@pdborcl
+SQL> GRANT SELECT ON jobs TO scott;
+SQL> GRANT UPDATE(min_salary,max_salary)ON jobs TO scott;
+SQL> COL grantee FORMAT a10
+SQL> COL table_name FORMAT a10
+SQL> COL grantor FORMAT a10
+SQL> COL column_name FORMAT a15
+SQL> SELECT grantee,table_name,grantor,privilege FROM USER_TAB_PRIVS_MADE WHERE  grantee='SCOTT';
+SQL> SELECT grantee,table_name,column_name,grantor,privilege FROM USER_COL_PRIVS_MADE WHERE  grantee='SCOTT';
+
+HR用户授权完成之后，可以用SCOTT用户登录，测试一下授权是否成功，能不能进行授权之外的操作：
+$ sqlplus scott/123@pdborcl
+SQL> SELECT count(*)FROM hr.jobs;
+SQL> UPDATE hr.jobs SET min_salary=min_salary;
+SQL> UPDATE hr.jobs SET job_title=job_title;
+SQL> DELETE FROM hr.jobs;
+
+【示例7-7】用户常用操作
+本示例演示了修改用户密码、锁定用户、解除锁定用户和删除用户的操作。
+$ sqlplus / as sysdba
+SQL> ALTER USER c##user1 IDENTIFIED BY 123;
+SQL> ALTER USER c##user1 ACCOUNT LOCK;
+SQL> ALTER USER c##user1 ACCOUNT UNLOCK;
+SQL> DROP USER c##user1 CASCADE;
+
+
+【示例7-8】监视用户
+监视用户HR的查询语句，强行终止HR的会话
+$ sqlplus / as sysdba
+SQL> SELECT user_name,address,sql_text FROM v$open_cursor WHERE  user_name='HR' and cursor_type='OPEN';
+SQL> col machine format a10
+SQL> col terminal format a10
+SQL> col username format a10
+SQL> SELECT username,sid,serial#,status,machine,terminal,logon_time FROM v$session WHERE  username='HR';
+SQL> ALTER SYSTEM KILL SESSION  '256,36013';
+
+
+
+
+【示例7-9】创建概要文件并指定给用户HR
+本示例由SYSTEM用户在PDBORCL中创建一个本地概要文件profile1，并指定给用户HR。概要文件中设置了两个参数的值。其他未指定参数的值自动设置为“DEFAULT”。通过dba_profiles查询概要文件的所有参数。
+$ sqlplus system/***@pdborcl;
+SQL> CREATE PROFILE profile1 LIMIT  FAILED_LOGIN_ATTEMPTS 2  SESSIONS_PER_USER 3;
+SQL> COL profile FORMAT a10
+SQL> COL resource_name FORMAT a30
+SQL> COL resource FORMAT a10
+SQL> COL limit FORMAT a10
+SQL> SELECT * FROM dba_profiles WHERE  profile='PROFILE1';
+SQL> ALTER USER hr PROFILE profile1;
+User altered.
+
+现在，HR用户的概要文件变成了profile1，这个概要文件中有一项限制是“failed_login_attempts 2”表示如果用户连续两次登录失败，用户将被锁定。假定用户HR的正确密码是123，现在两次登录，故意输入错误的密码，第3次登录即使密码正确也会失败，必须用SYSTEM用户解除锁定之后，才能登录。
+$ sqlplus hr/wrongpass@pdborcl
+$ sqlplus hr/wrongpass@pdborcl
+$ sqlplus hr/123@pdborcl
+
+【示例7-10】删除概要文件profile1
+$ sqlplus system/123@pdborcl;
+SQL> DROP PROFILE profile1 CASCADE;
+SQL> SELECT username,profile FROM dba_users WHERE  username='HR';

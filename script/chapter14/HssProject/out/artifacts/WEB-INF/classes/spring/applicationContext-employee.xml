@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+    <!--切记需要写上scope=prototype(即是多例模式)-->
+    <bean id="login" class="com.panda.action.LoginAction" scope="prototype"/>
+    <bean id="actionEmployee" class="com.panda.action.EmployeeAction" scope="prototype"/>
+    <bean id="employees" class="com.panda.action.EmployeeListAction" scope="prototype"/>
+    <bean id="employees2" class="com.panda.action.EditEmployeeAction" scope="prototype"/>
+ </beans>

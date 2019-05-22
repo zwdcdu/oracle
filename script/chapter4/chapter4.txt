@@ -1,0 +1,140 @@
+﻿【示例4-1】查看所有数据库实例
+本例通过ps和ls两个linux命令查看有哪些Oracle实例。ps命令查看正在运行的实例,ls查看已经安装的实例,不管是否正在运行。
+$ ps -ef | grep -i "ora_pmon"
+$ cd $ORACLE_HOME/dbs
+$ ls spfile*.ora
+
+
+【示例4-2】查看当前实例名称及状态以及参数
+本示例通过v$instance查询当前实例,通过dba_pdbs查询所有PDB的状态,通过show pdbs快速查询所有PDB的状态。
+$ sqlplus / as sysdba
+SQL> SELECT instance_name,status FROM v$instance;
+SQL> show pdbs
+SQL> SELECT pdb_id,pdb_name,STATUS FROM dba_pdbs;
+数据库的参数查询命令是show parameter 参数名,可以查询出包含参数名的所有参数。比如show parameter db_block可以查询出所有参数名称中包含有db_block的参数值。
+$ sqlplus / as sysdba
+SQL> show parameter db_name
+SQL> show parameter db_block
+
+
+【示例4-3】dbca静默新建数据库实例
+本例以命令行静默方式为例,新建一个数据库实例orcl2,最重要的选项是“-sid orcl2 -createAsContainerDatabase true”。
+$ dbca -silent -createDatabase –templateName General_Purpose.dbc
+ -gdbname orcl2 -sid orcl2 -createAsContainerDatabase true -responseFile NO_VALUE -characterSet AL32UTF8 -memoryPercentage 10 -emConfiguration LOCAL -sysPassword 123 -systemPassword 123
+
+
+【示例4-4】切换实例
+本例在orcl和orcl2两个实例之间进行登录切换。
+$ export ORACLE_SID=orcl2
+$ sqlplus / as sysdba
+SQL> SELECT instance_name,status FROM v$instance;
+SQL>exit
+$ export ORACLE_SID=orcl
+$ sqlplus / as sysdba
+SQL> SELECT instance_name,status FROM v$instance;
+
+注意：登录时,一定要确保实例是正确的,即确保正在管理的数据库是想要管理的数据库,否则就会张冠李戴,造成工作失误。
+为了尽量避免在多实例的服务器上不犯实例名称的错误,可以修改sqlplus的提示符“SQL>”为“用户名@实例名>”。
+方法是：只需在下面文件$ORACLE_HOME/sqlplus/admin/glogin.sql中添加一行：
+set sqlprompt "_user'@'_connect_identifier>"
+即可实现这样的目的。下面是这样设置以后,登录后的效果：
+$ sqlplus / as sysdba
+SYS@orcl2>
+
+
+【示例4-5】创建插接式数据库pdbtest
+本示例创建一个插接式数据库pdbtest,指定pdbtest的管理用户名为user1,指定将pdbseed的文件作为基础,应用于pdbtest的文件。pdbseed目录源于PDB$SEED种子数据库。
+$ sqlplus / as sysdba
+SQL> CREATE PLUGGABLE DATABASE pdbtest ADMIN USER user1 
+ IDENTIFIED BY 123 FILE_NAME_CONVERT= 
+ ('/home/oracle/app/oracle/oradata/orcl/pdbseed/',
+  '/home/oracle/app/oracle/oradata/orcl/pdbtest');
+
+
+【示例4-6】创建pdborcl的克隆数据库clonedb
+本示例将pdborcl克隆成了clonedb。注意,在克隆之前,需要首先关闭pdborcl,然后打开为只读状态,这样避免了在克隆过程中pdborcl有数据修改。克隆完成后,需要打开pdborcl和clonedb为正常的读写模式。
+$ sqlplus / as sysdba
+SQL>ALTER PLUGGABLE DATABASE pdborcl CLOSE;
+SQL>ALTER PLUGGABLE DATABASE pdborcl OPEN READ ONLY;
+SQL>CREATE PLUGGABLE DATABASE clonedb FROM pdborcl
+ file_name_convert=
+ ('/home/oracle/app/oracle/oradata/orcl/pdborcl',
+ '/home/oracle/app/oracle/oradata/orcl/clonedb/');
+SQL>ALTER PLUGGABLE DATABASE pdborcl CLOSE;
+SQL>ALTER PLUGGABLE DATABASE pdborcl OPEN;
+SQL>ALTER PLUGGABLE DATABASE clonedb OPEN;
+SQL>show pdbs;
+ 
+【示例4-7】删除插接式数据库clonedb
+$ sqlplus / as sysdba
+SQL>ALTER PLUGGABLE DATABASE clonedb CLOSE;
+SQL>DROP PLUGGABLE DATABASE clonedb INCLUDING DATAFILES;
+
+
+【示例4-8】拔出和插入PDB
+本示例首先拔出clonedb,然后再插入clonedb,插入后改变名称为clonedb2。
+$ sqlplus / as sysdba
+SQL>ALTER PLUGGABLE DATABASE clonedb CLOSE;
+SQL>ALTER PLUGGABLE DATABASE clonedb UNPLUG INTO
+ '/home/oracle/app/oracle/oradata/orcl/clonedb/clonedb.xml';
+SQL> show pdbs;
+SQL> col pdb_name format a15
+SQL> SELECT pdb_id,pdb_name,STATUS FROM dba_pdbs;
+SQL> DROP PLUGGABLE DATABASE clonedb;
+SQL> exit
+上面的命令使用于关键字unplug,将clonedb插出,并生成clonedb.xml文件,最后调用drop命令删除这个pdb,要注意的是,由于删除的时候没有使用选项“INCLUDING DATAFILES”,所以并未删除数据文件,clonedb的结构和数据都完好无损。在此基础上,可以将clonedb重新插入到CDB中。
+$ sqlplus / as sysdba
+SQL>CREATE PLUGGABLE DATABASE clonedb2 USING
+ '/home/oracle/app/oracle/oradata/orcl/clonedb/clonedb.xml' nocopy;
+
+
+
+【示例4-9】启动一个PDB
+本例假设数据库当前处于关闭状态,并且还没有创建数据库的启动触发器,首先启动CDB,然后手工启动pdborcl数据库。
+$ sqlplus / as sysdba
+SQL> STARTUP
+SQL> show pdbs
+第一次运行startup时,只启动了CDB,通过show pdbs命令可以看出pdborcl数据库在MOUNTED状态,还没有启动。下面通过两种不种的方式启动pdborcl。
+方法1：
+SQL> STARTUP PLUGGABLE DATABASE pdborcl;
+方法2：
+SQL> ALTER SESSION SET CONTAINER=pdborcl;
+SQL> STARTUP
+SQL> show pdbs
+SQL> exit
+
+
+【示例4-10】一次性启动所有PDB
+如果希望一次性启动所有PDB,只需要运行一次“ALTER PLUGGABLE DATABASE ALL OPEN;”。如果希望在启动CDB之后自动执行该语句,打开所有PDB,就必须像本示例这样创建一个触发器：
+$ sqlplus / as sysdba
+SQL> CREATE OR REPLACE TRIGGER open_all_pdbs
+    AFTER STARTUP ON DATABASE
+    BEGIN
+       EXECUTE IMMEDIATE 'ALTER PLUGGABLE DATABASE ALL OPEN';
+    END open_all_pdbs;
+    /
+
+SQL> SELECT trigger_name FROM user_triggers;
+
+
+【示例4-11】关闭所有数据库
+以管理员身份登录数据库,在CDB中运行shutdown immediate可以关闭所有数据库,同时关闭所有PDB。
+$ sqlplus / as sysdba
+SQL> SHUTDOWN IMMEDIATE
+
+
+【示例4-12】关闭一个PDB
+本示例以管理员身份登录数据库,只关闭pdborcl,不会关闭其他PDB,也不会关闭CDB。
+$ sqlplus / as sysdba
+SQL> ALTER SESSION SET CONTAINER=pdborcl;
+SQL> SHUTDOWN IMMEDIATE
+
+
+【示例4-13】修改sga_target系统参数
+本例是通过增加sga_target参数的值改善Oracle的SGA性能。通过“ALTER SYSTEM SET sga_target=1600M scope=spfile;”命令将原来的sga_target内存从1536M增加到1600M。由于选择的选项是“scope=spfile;”,所以需要重启才能生效。通过命令“show parameter sga_;”可以查询包含sga_的所有参数。
+$ sqlplus / as sysdba
+SQL> show parameter sga_;
+SQL> ALTER SYSTEM SET sga_target=1600M SCOPE=SPFILE;
+SQL> SHUTDOWN IMMEDIATE
+SQL> STARTUP
+SQL> show parameter sga_;

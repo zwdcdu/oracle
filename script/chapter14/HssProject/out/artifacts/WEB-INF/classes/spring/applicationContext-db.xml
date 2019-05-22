@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!-- c3p0连接池配置-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="driverClass" value="${jdbc.driver}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="user" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.password}"/>
+
+        <!--当连接池用完时客户端调用getConnection()后等待获取新连接的时间，超时后将抛出
+        <property name= "checkoutTimeout"  value= "${jdbc.checkoutTimeout}" />
+        -->
+        <!--每隔多少秒秒检查所有连接池中的空闲连接-->
+        <property name= "idleConnectionTestPeriod"  value= "${jdbc.idleConnectionTestPeriod}" />
+        <!--连接池中保留的最大连接数-->
+        <property name= "maxPoolSize"  value= "${jdbc.maxPoolSize}" />
+        <!--连接池中保留的最小连接数-->
+        <property name= "minPoolSize"  value= "${jdbc.minPoolSize}" />
+        <!--连接池中缓存数-->
+        <property name= "maxStatements"  value= "${jdbc.maxStatements}" />
+        <!--连接池中保留的最小连接数 -->
+        <property name="initialPoolSize" value="${jdbc.initialPoolSize}"/>
+    </bean>
+
+    <!--配置sessionFactory-->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <!--配置hibernate属性-->
+        <property name="hibernateProperties">
+        <props>
+            <prop key="hibernate.dialect">org.hibernate.dialect.OracleDialect</prop>
+            <prop key="hibernate.show_sql">true</prop>
+            <prop key="hibernate.format_sql">true</prop>
+            <prop key="hibernate.hbm2ddl.auto">update</prop>
+            <prop key="hibernate.connection.autocommit">false</prop>
+            <!--getCurrentSession的配置-->
+            <prop key="hibernate.current_session_context_class">thread</prop>
+            <prop key="show_sql">false</prop>
+            <prop key="format_sql">false</prop>
+        </props>
+    </property>
+        <!--映射文件的加载路径-->
+        <property name="mappingDirectoryLocations">
+            <list>
+                <value>
+                    classpath:com/panda/po
+                </value>
+            </list>
+        </property>
+    </bean>
+
+    <!--加载jdbc.properties配置文件的位置-->
+    <context:property-placeholder location="classpath:jdbc.properties"/>
+
+    <!--配置事务管理-->
+    <bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <!--需要数据源 -->
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <!--声明式事务处理-->
+    <tx:advice transaction-manager="transactionManager" id="tx">
+            <tx:attributes>
+                <tx:method name="query*" read-only="true"/>
+                <tx:method name="delete*" read-only="false"/>
+                <tx:method name="add*" read-only="false"/>
+                <tx:method name="update*" read-only="false"/>
+            </tx:attributes>
+    </tx:advice>
+
+    <aop:config>
+        <aop:pointcut expression="execution(* com.panda.serviceImpl.*.*(..))" id="exceptionAspj"/>
+        <aop:advisor advice-ref="tx" pointcut-ref="exceptionAspj"/>
+        <aop:aspect ref="exceptionTransaction">
+            <aop:after-throwing method="throwException" throwing="e" pointcut-ref="exceptionAspj"/>
+        </aop:aspect>
+    </aop:config>
+
+    <context:annotation-config />
+    <context:component-scan base-package="com.panda"/>
+    <bean id="exceptionTransaction" class="com.panda.transaction.ExceptionTransaction"/>
+</beans>

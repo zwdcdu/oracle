@@ -1,0 +1,563 @@
+﻿【示例8-1】创建表
+在STUDY用户中创建表products。
+SQL> CREATE TABLE study.products
+(
+  product_id VARCHAR2(40 BYTE)NOT NULL
+  ,product_name VARCHAR2(40 BYTE)NOT NULL
+  ,product_type VARCHAR2(40 BYTE)NOT NULL
+  ,CONSTRAINT products_pk PRIMARY KEY(product_id)ENABLE
+)
+LOGGING
+TABLESPACE "USERS"
+PCTFREE 10
+INITRANS 1
+STORAGE
+( 
+  INITIAL 65536 
+  NEXT 1048576 
+  MINEXTENTS 1 
+  MAXEXTENTS 2147483645 
+  BUFFER_POOL DEFAULT
+);
+
+【示例8-2】添加列
+在study用户的products表中添加列product_desc。
+SQL> DESC products;
+SQL> ALTER TABLE products ADD product_desc VARCHAR2(100);
+SQL> COMMIT;
+SQL> DESC products;
+		
+【示例8-3】修改列
+在study用户的products表中修改列product_desc。
+SQL> DESC products;
+SQL> ALTER TABLE products RENAME COLUMN product_desc TO product_des;
+SQL> ALTER TABLE products MODIFY product_des VARCHAR2(200);
+SQL> ALTER TABLE products MODIFY product_des 
+DEFAULT 'THIS IS A TEST';
+SQL> COMMIT;
+SQL> DESC products;
+
+【示例8-4】删除列
+在study用户的products表中删除列product_des。
+SQL> DESC products;
+SQL> ALTER TABLE products DROP COLUMN product_des;
+SQL> COMMIT;
+SQL> DESC products;
+
+【示例8-5】CHECK约束
+在study用户的products表中增加一个CHECK约束。
+SQL> ALTER TABLE products
+ADD CONSTRAINT products_chk1 CHECK
+(product_type IN ('耗材','手机','电脑'))
+ENABLE;
+SQL> COMMIT;
+
+【示例8-6】唯一约束
+在study用户的products表中增加一个唯一约束。
+SQL> ALTER TABLE products
+ADD CONSTRAINT products_uni1 UNIQUE(product_name)ENABLE;
+SQL> COMMIT;
+
+【示例8-7】按订单日期范围分区
+在study用户中创建分区表orders，按订单日期分区。
+SQL> CREATE TABLE study.orders 
+(
+ order_id NUMBER(10,0)NOT NULL 
+ ,customer_name VARCHAR2(40 BYTE)NOT NULL 
+ ,customer_tel VARCHAR2(40 BYTE)NOT NULL 
+ ,order_date DATE NOT NULL 
+ ,employee_id NUMBER(6,0)NOT NULL 
+ ,discount NUMBER(8,2)DEFAULT 0 
+ ,trade_receivable NUMBER(8,2)DEFAULT 0 
+)
+TABLESPACE USERS 
+PCTFREE 10 
+INITRANS 1 
+STORAGE 
+( 
+ BUFFER_POOL DEFAULT 
+)
+PARTITION BY RANGE (order_date)
+(
+ PARTITION partition_before_2016 VALUES LESS THAN (
+  TO_DATE(' 2016-01-01 00：00：00','SYYYY-MM-DD HH24：MI：SS',
+  'NLS_CALENDAR=GREGORIAN'))TABLESPACE USERS,
+  PARTITION partition_before_2017 VALUES LESS THAN (
+  TO_DATE(' 2017-01-01 00：00：00','SYYYY-MM-DD HH24：MI：SS',
+  'NLS_CALENDAR=GREGORIAN'))TABLESPACE USERS02 
+);
+SQL> COMMIT;
+
+【示例8-8】按订单号范围分区
+在study用户中创建分区表orders,按订单号分区。
+SQL> CREATE TABLE study.orders 
+(
+order_id NUMBER(10,0)NOT NULL 
+,customer_name VARCHAR2(40 BYTE)NOT NULL 
+,customer_tel VARCHAR2(40 BYTE)NOT NULL 
+,order_date DATE NOT NULL 
+,employee_id NUMBER(6,0)NOT NULL 
+,discount NUMBER(8,2)DEFAULT 0 
+,trade_receivable NUMBER(8,2)DEFAULT 0 
+)
+PARTITION BY RANGE (order_id)
+( 
+  PARTITION ord_part1 VALUES LESS THAN (100000)
+  TABLESPACE USERS,
+  PARTITION ord_part2 VALUES LESS THAN (200000)
+  TABLESPACE USERS02 
+);
+SQL> COMMIT;
+
+【示例8-9】按产品类型列表分区
+在study用户中创建分区表products，按产品类型分区。
+SQL> CREATE TABLE study.products
+(
+ product_id VARCHAR2(40 BYTE)NOT NULL
+ ,product_name VARCHAR2(40 BYTE)NOT NULL
+ ,product_type VARCHAR2(40 BYTE)NOT NULL
+ ,CONSTRAINT products_pk PRIMARY KEY(product_id)ENABLE
+)
+PARTITION BY LIST(product_type)
+( 
+ PARTITION  pd_part1 VALUES ('门套','门楣')TABLESPACE  USERS,
+ PARTITION  pd_part2 VALUES ('双开门','推拉门') TABLESPACE USERS02 
+);
+SQL> COMMIT;
+
+【示例8-10】按ID散列分区
+在study用户中创建分区表test，按id散列分区。
+SQL> CREATE TABLE study.test
+( 
+ id NUMBER(8),
+ information VARCHAR2(100)
+)
+PARTITION BY HASH(id)
+( 
+ PARTITION test_part1 TABLESPACE USERS,
+ PARTITION test_part2 TABLESPACE USERS02,
+);
+SQL> COMMIT;
+
+【示例8-11】在主表orders和从表order_details之间建立引用分区
+在study用户中创建两个表：orders（订单表）和order_details（订单详表），两个表通过列order_id建立主外键关联。orders表按范围分区进行存储，order_details使用引用分区进行存储。
+创建orders表的部分语句是：
+SQL> CREATE TABLE orders 
+(
+ order_id NUMBER(10, 0) NOT NULL 
+ , customer_name VARCHAR2(40 BYTE) NOT NULL 
+ , customer_tel VARCHAR2(40 BYTE) NOT NULL 
+ , order_date DATE NOT NULL 
+ , employee_id NUMBER(6, 0) NOT NULL 
+ , discount NUMBER(8, 2) DEFAULT 0 
+ , trade_receivable NUMBER(8, 2) DEFAULT 0 
+) 
+TABLESPACE USERS 
+PCTFREE 10 INITRANS 1 
+STORAGE (   BUFFER_POOL DEFAULT ) 
+NOCOMPRESS NOPARALLEL 
+PARTITION BY RANGE (order_date) 
+(
+ PARTITION PARTITION_BEFORE_2016 VALUES LESS THAN (
+ TO_DATE(' 2016-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 
+ 'NLS_CALENDAR=GREGORIAN')) 
+ NOLOGGING 
+ TABLESPACE USERS 
+ PCTFREE 10 
+ INITRANS 1 
+ STORAGE 
+( 
+ INITIAL 8388608 
+ NEXT 1048576 
+ MINEXTENTS 1 
+ MAXEXTENTS UNLIMITED 
+ BUFFER_POOL DEFAULT 
+) 
+NOCOMPRESS NO INMEMORY  
+, PARTITION PARTITION_BEFORE_2017 VALUES LESS THAN (
+TO_DATE(' 2017-01-01 00:00:00', 'SYYYY-MM-DD HH24:MI:SS', 
+'NLS_CALENDAR=GREGORIAN')) 
+NOLOGGING 
+TABLESPACE USERS02 
+...
+);
+创建order_details表的部分语句如下：
+SQL> CREATE TABLE order_details 
+(
+id NUMBER(10, 0) NOT NULL 
+, order_id NUMBER(10, 0) NOT NULL
+, product_id VARCHAR2(40 BYTE) NOT NULL 
+, product_num NUMBER(8, 2) NOT NULL 
+, product_price NUMBER(8, 2) NOT NULL 
+, CONSTRAINT order_details_fk1 FOREIGN KEY  (order_id)
+REFERENCES orders  (  order_id   )
+ENABLE 
+) 
+TABLESPACE USERS 
+PCTFREE 10 INITRANS 1 
+STORAGE (   BUFFER_POOL DEFAULT ) 
+NOCOMPRESS NOPARALLEL
+PARTITION BY REFERENCE (order_details_fk1)
+(
+PARTITION PARTITION_BEFORE_2016 
+NOLOGGING 
+TABLESPACE USERS --必须指定表空间,否则会将分区存储在用户的默认表空间中
+) 
+NOCOMPRESS NO INMEMORY, 
+PARTITION PARTITION_BEFORE_2017 
+NOLOGGING 
+TABLESPACE USERS02
+...
+) 
+NOCOMPRESS NO INMEMORY  
+);
+
+【示例8-12】分区表维护操作示例。
+--添加分区
+SQL> ALTER TABLE products ADD PARTITION partition_before_2018
+VALUES LESS THAN(TO_DATE('2018-01-01','YYYY-MM-DD')); 
+--删除分区
+SQL> ALTER TABLE products DROP PARTITION partition_before_2018;
+--截断分区：删除分区中的数据
+SQL> ALTER TABLE products TRUNCATE PARTITION partition_before_2018;
+--合并分区：结果分区将采用较高分区的界限
+SQL> ALTER TABLE products MERGE 
+PARTITIONS partition_before_2017,partition_before_2018 
+INTO PARTITION partition_before_2018;
+【示例8-13】创建B-树索引
+在study用户的employees表中按employee_id和name创建B-树索引。
+SQL> CREATE UNIQUE INDEX employees_pk ON employees (employee_id ASC) 
+TABLESPACE USERS;
+SQL> CREATE INDEX employees_index1_name ON employees (name ASC) 
+TABLESPACE USERS;
+SQL> COMMIT;
+SQL> COL index_name FORMAT a25;
+SQL> COL table_name FORMAT a15;
+SQL> COL index_type FORMAT a15; 
+SQL> SELECT index_name,table_name,index_type,uniqueness FROM
+user_indexes WHERE table_name = 'EMPLOYEES';
+
+【示例8-14】建本地分区索引
+在study用户的orders表中创建本地分区索引orders_index_date。
+SQL> CREATE INDEX orders_index_date ON orders (order_date ASC)
+LOCAL 
+(
+PARTITION partition_before_2016 
+TABLESPACE USERS 
+PCTFREE 10 
+INITRANS 2 
+STORAGE 
+( 
+INITIAL 8388608 
+NEXT 1048576 
+MINEXTENTS 1 
+MAXEXTENTS UNLIMITED 
+BUFFER_POOL DEFAULT 
+)
+NOCOMPRESS  
+,PARTITION partition_before_2017 
+TABLESPACE USERS02 
+PCTFREE 10 
+INITRANS 2 
+STORAGE 
+( 
+INITIAL 8388608 
+NEXT 1048576 
+MINEXTENTS 1 
+MAXEXTENTS UNLIMITED 
+BUFFER_POOL DEFAULT 
+)
+NOCOMPRESS  
+)
+STORAGE 
+( 
+BUFFER_POOL DEFAULT 
+)
+NOPARALLEL; 
+SQL> COMMIT;
+
+【示例8-15】创建全局分区索引
+在study用户的orders表中创建全局分区索引orders_pk。
+SQL> CREATE UNIQUE INDEX orders_pk ON orders (order_id ASC)
+GLOBAL PARTITION BY HASH (order_id)
+(
+PARTITION index_partition1 TABLESPACE USERS 
+NOCOMPRESS  
+,PARTITION index_partition2 TABLESPACE USERS02 
+NOCOMPRESS  
+)
+NOLOGGING 
+TABLESPACE USERS 
+PCTFREE 10 
+INITRANS 2 
+STORAGE 
+( 
+INITIAL 65536 
+NEXT 1048576 
+MINEXTENTS 1 
+MAXEXTENTS UNLIMITED 
+BUFFER_POOL DEFAULT 
+)
+NOPARALLEL;
+SQL> COMMIT;
+
+【示例8-16】创建基于函数的索引
+在study用户的employees表中创建基于函数的索引emp_upper_idx。
+SQL> CREATE INDEX emp_upper_idx ON employees (UPPER(last_name)); 
+SQL> SELECT * FROM employees WHERE UPPER(last_name)='KING';
+
+【示例8-17】创建簇
+在study用户中创建簇emp_dept_cluster，用于保存部门和员工数据。
+SQL> CREATE CLUSTER study.emp_dept_cluster (dep_id NUMBER ) 
+PCTUSED 60  
+PCTFREE 10  
+SIZE 1024  
+TABLESPACE USERS  
+STORAGE (  
+INITIAL 128 k  
+NEXT 128 k  
+MINEXTENTS 2  
+MAXEXTENTS 20  
+);
+
+【示例8-18】创建簇表
+在study用户的emp_dept_cluster簇中创建簇表dep_clu和emp_clu。
+SQL>CREATE TABLE dep_clu (
+dep_id number,
+dep_name varchar2 (20)
+)
+CLUSTER emp_dept_cluster(dep_id);
+SQL>CREATE TABLE emp_clu (
+emp_id NUMBER,
+emp_name VARCHAR2(20),
+job_id VARCHAR2(10),
+dep_id NUMBER
+)
+CLUSTER emp_dept_cluster(dep_id);
+
+【示例8-19】创建簇索引
+在study用户的emp_dept_cluster簇中创建簇索引index_clu。
+SQL>CREATE INDEX index_clu ON CLUSTER emp_dept_cluster;
+
+【示例8-20】查询簇信息
+使用system用户，以sysdba的身份登录后查询簇信息。
+SQL> COL cluster_name FORMAT a20;
+SQL> COL owner FORMAT a20;
+SQL> COL tablespace_name FORMAT a20;
+SQL> SELECT cluster_name,owner,tablespace_name,cluster_type 
+FROM dba_clusters;
+
+【示例8-20】查询簇信息
+使用system用户,以sysdba的身份登录后查询簇信息。
+SQL> COL cluster_name FORMAT a20;
+SQL> COL owner FORMAT a20;
+SQL> COL tablespace_name FORMAT a20;
+SQL> SELECT cluster_name,owner,tablespace_name,cluster_type 
+FROM dba_clusters;
+
+【示例8-21】修改簇
+修改簇emp_dept_cluster的PCTUSED属性。
+SQL> ALTER CLUSTER emp_dept_cluster PCTUSED 100;
+
+【示例8 22】创建连接视图
+在HR用户中创建employees表、departments表和jobs表联合查询的连接视图v_emp_dept。
+SQL> CREATE OR REPLACE VIEW v_emp_dept
+AS
+SELECT e.employee_id,e.last_name,j.job_title,d.department_name
+FROM departments d JOIN employees e 
+ON d.department_id=e.department_id JOIN jobs j 
+ON e.job_id=j.job_id;
+SQL> COMMIT;
+SQL> SELECT * FROM v_emp_dept WHERE job_title='Programmer';
+
+【示例8-23】在HR用户中通过连接视图V_EMP_DEPT插入数据。
+SQL> INSERT INTO v_emp_dept VALUES(999,'Eric','Programmer','IT');
+
+【示例8-24】更改视图
+在HR用户中将视图v_emp_dept改为只读。
+SQL> CREATE OR REPLACE VIEW v_emp_dept
+AS
+SELECT e.employee_id,e.last_name,j.job_title,d.department_name
+FROM departments d JOIN employees e 
+ON d.department_id=e.department_id JOIN jobs j 
+ON e.job_id=j.job_id
+WITH READ ONLY;
+
+【示例8 25】创建物化视图
+在HR用户中创建物化视图mv_materialized_emp。
+SQL> CREATE MATERIALIZED VIEW mv_materialized_emp 
+REFRESH FORCE ON DEMAND 
+START WITH SYSDATE Next SYSDATE+1
+AS
+SELECT * FROM employees;
+
+【示例8-26】创建序列
+在study用户中使用默认值创建序列seq_test。
+SQL> CREATE SEQUENCE seq_test
+
+【示例8-27】使用序列
+在study用户中，使用序列seq_test为数据库表test主键赋值。
+SQL>CREATE TABLE test 
+(id NUMBER NOT NULL,
+name VARCHAR2(25),
+CONSTRAINT "id_pk" PRIMARY KEY(id)
+)
+TABLESPACE USERS;
+SQL> COMMIT;
+SQL> SELECT seq_test.CURRVAL FROM dual;
+SQL> INSERT INTO test VALUES(seq_test.NEXTVAL,'软件工程1');
+SQL> COMMIT;
+SQL> SELECT * FROM test;
+SQL> SELECT seq_test.CURRVAL FROM dual;
+SQL> INSERT INTO test VALUES(seq_test.NEXTVAL,'软件工程2');
+SQL> COMMIT;
+SQL> SELECT * FROM test;
+
+【示例8-28】创建自动序列
+在study用户中，为数据库表test2主键创建自动序列。
+SQL>CREATE TABLE test2 
+(id NUMBER GENERATED BY DEFAULT AS IDENTITY(START WITH 10),
+name VARCHAR2(25),
+CONSTRAINT "id_pk" PRIMARY KEY(id)
+)
+TABLESPACE USERS;
+SQL> INSERT INTO test(name)VALUES('软件工程1');
+SQL> INSERT INTO test(name)VALUES('软件工程2');
+SQL> COMMIT;
+SQL> SELECT * FROM test2;
+
+【示例8-29】创建同义词
+在hr用户中,为数据库表departments创建同义词dept。
+SQL> CREATE SYNONYM dept FOR hr.departments;
+SQL> COMMIT;
+SQL> SELECT * FROM dept;
+
+【示例8-30】导出数据生成XML
+在hr用户中，将数据库表employees中的数据生成XML。
+SQL> SELECT XMLELEMENT(
+"employee",
+XMLELEMENT("id",employee_id),
+XMLELEMENT("name",first_name||' '||last_name)
+)AS xml_employee
+FROM employees WHERE department_id=60;
+
+【示例8-31】导出数据生成带属性的XML
+在hr用户中,将数据库表employees中的数据生成带属性的XML。
+SQL> SELECT XMLELEMENT(
+"employee",
+XMLATTRIBUTES(
+employee_id AS "id",
+first_name||' '||last_name AS "name"
+)
+)AS xml_employee
+FROM employees WHERE department_id=60;
+
+【示例8-32】创建XML表
+在study用户中，创建2个XML表xmlcontent和xmltable，xmlcontent是一个有XMLTYPE类型字段的表，xmltable是一个XMLTYPE类型的表。
+SQL> CREATE TABLE xmlcontent(
+keyvalue VARCHAR2(10)PRIMARY KEY,
+xmlvalue XMLTYPE);
+SQL> CREATE TABLE xmltable OF XMLTYPE;
+SQL> COMMIT;
+
+【示例8-33】在study用户中,直接插入XML数据到表xmlcontent。
+SQL> INSERT INTO xmlcontent VALUES(1,
+SYS.XMLTYPE.CREATEXML(
+'<?xml version="1.0" encoding="UTF-8"?>  
+<shiporder orderid="000002" 
+xsi：noNamespaceSchemaLocation="shiporder.xsd" 
+xmlns：xsi="http：//www.w3.org/2001/XMLSchema-instance">  
+<orderperson>String1</orderperson>  
+<shipto>  
+<name>张三</name>  
+<address>成华区</address>  
+<city>成都市</city>  
+<country>中国</country>  
+</shipto>
+<item>  
+<title>电脑1</title>
+<note>小心轻放</note>
+<quantity>32</quantity>  
+<price>1000.0</price>  
+</item>
+<item>  
+<title>笔记本1</title>  
+<quantity>212</quantity>  
+<price>100.30</price>  
+</item>        
+</shiporder>  
+')); 
+SQL> COMMIT;
+SQL> SELECT x.XMLVALUE.GETSTRINGVAL()FROM xmlcontent x;
+
+【示例8-34】导入数据到XML表
+在study用户中，从文件PurchaseOrder.xml导入数据到表xmltable中。
+SQL> INSERT INTO xmltable VALUES(
+XMLTYPE(bfilename('XMLDIR','PurchaseOrder.xml'),
+nls_charset_id('AL32UTF8'))); 
+SQL> SELECT x.OBJECT_VALUE.getSTRINGVal()FROM xmltable x;
+
+【示例8-35】判断XPath中节点是否存在
+在表xmltable中,判断XPath中节点“/PurchaseOrder/Reference”是否存在，存在返回值1 不存在返回0。
+SQL> SELECT existsNode(OBJECT_VALUE,'/PurchaseOrder/Reference')A
+FROM xmltable;
+
+示例8-36】提取XPath节点值
+在表xmltable中，提取XPath节点“/PurchaseOrder/Reference”值。
+SQL> SELECT extractValue(OBJECT_VALUE，'/PurchaseOrder/Reference')A
+FROM xmltable
+WHERE existsNode(OBJECT_VALUE,'/PurchaseOrder/Reference')= 1;
+
+【示例8-37】提取XPath节点
+在表xmltable中，提取XPath节点“/PurchaseOrder/Reference”。
+SQL> SELECT extract(OBJECT_VALUE,'/PurchaseOrder/Reference')
+"REFERENCE" FROM xmltable;
+
+【示例8-38】使用SQL解析XML数据
+在表xmltable中，使用SQL解析XML数据，获取相应信息。
+SQL> SELECT extractValue(OBJECT_VALUE,'/PurchaseOrder/Reference')
+REFERENCE,extractValue(OBJECT_VALUE,'/PurchaseOrder/*//User'')
+USERID,CASE
+WHEN existsNode(OBJECT_VALUE,'/PurchaseOrder/Reject')= 1
+THEN 'Rejected'
+ELSE 'Accepted' 
+END "STATUS",
+extractValue(OBJECT_VALUE,'//CostCenter')CostCenter
+FROM xmltable 
+WHERE existsNode(OBJECT_VALUE,'//Reject')= 1;
+
+【示例8-39】更新整个XML文档数据
+使用PurchaseOrder2.xml文件更新表xmltable中数据。
+SQL> UPDATE xmltable x SET
+VALUE(x)=XMLTYPE(bfilename('XMLDIR','PurchaseOrder2.xml'),
+nls_charset_id('AL32UTF8'));
+
+【示例8-40】更新一个节点值
+更新/PurchaseOrder/Reference 节点的值。
+SQL> UPDATE xmltable x
+SET value(x)=updateXML(value(x),
+'/PurchaseOrder/Reference/text()',
+'MILLER-200203311200000000PST')
+WHERE existsNode(value(x),
+'/PurchaseOrder[Reference="ADAMS-20011127121040988PST"]')=1;
+SQL> COMMIT;
+SQL> SELECT extract(OBJECT_VALUE,'/PurchaseOrder/Reference')
+"REFERENCE" FROM xmltable;
+
+【示例8-41】更新一个节点树
+更新/PurchaseOrders/LineItems/LineItem[2]节点树中数据。
+SQL> UPDATE xmltable x
+SET value(x)= 
+updateXML(value(x),
+'/PurchaseOrder/LineItems/LineItem[2]',
+xmltype('<LineItem ItemNumber="4">
+<Description>Andrei Rublev</Description>
+<Part Id="715515009928" UnitPrice="39.95" Quantity="2"/>
+</LineItem>'
+))
+WHERE existsNode(value(x),
+'/PurchaseOrder[Reference="MILLER-200203311200000000PST"]')=1;
+SQL> COMMIT;
+SQL> SELECT extract(OBJECT_VALUE,
+'/PurchaseOrder/LineItems/LineItem[2]')"LineItem" 
+FROM xmltable;

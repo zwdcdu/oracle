@@ -1,0 +1,134 @@
+﻿【示例6-1】在PDBORCL数据库中创建一个表空间
+本示例通过SYSTEM用户在PDBORCL数据库中创建一个表空间USERS02，由两个数据文件组成，每个文件的初始大小都是100M，自动增长，每次扩展50M，文件大小无限制。
+$ sqlplus system/***@pdborcl
+SQL>CREATE TABLESPACE users02 DATAFILE
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_1.dbf'
+  SIZE 100M AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED,
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_2.dbf' 
+  SIZE 100M AUTOEXTEND ON NEXT 50M MAXSIZE UNLIMITED
+EXTENT MANAGEMENT LOCAL SEGMENT SPACE MANAGEMENT AUTO;
+SQL>
+
+【示例6-2】查询PDBORCL数据库的所有表空间
+本示例查询PDBORCL数据库的所有表空间。从结果可以看出，所有表空间都在线，TEMP表空间是临时(TEMPORARY)表空间。
+$ sqlplus system/***@pdborcl
+SQL> SELECT TABLESPACE_NAME,STATUS,CONTENTS,LOGGING FROM dba_tablespaces;
+
+【示例6-3】统计PDBORCL数据库中所有表空间的使用情况
+$ sqlplus system/***@pdborcl
+SQL> SELECT a.tablespace_name "表空间名",Total "大小",
+ free "剩余",( total - free )"使用",
+ Round(( total - free )/ total,4)* 100 "使用率%"
+ from (SELECT tablespace_name,Sum(bytes)free
+        FROM   dba_free_space group  BY tablespace_name)a,
+       (SELECT tablespace_name,Sum(bytes)total FROM dba_data_files
+        group  BY tablespace_name)b
+ where  a.tablespace_name = b.tablespace_name;
+
+【示例6-4】修改表空间users02的名称为users03
+$ sqlplus system/***@pdborcl
+SQL> ALTER TABLESPACE users02 RENAME TO users03;
+
+【示例6-5】增加表空间大小
+本示例修改表空间USERS02中数据文件pdbtest_users02_1.dbf的大小，从100M修改为120M，再给表空间增加一个数据文件pdbtest_users02_3.dbf，大小是50M，并且自动增长。通过查询dba_data_files对比查询修改前后的大小。
+$ sqlplus system/***@pdborcl
+SQL> COL file_name FORMAT a70
+SQL> SELECT FILE_NAME,BYTES FROM dba_data_files WHERE  tablespace_name='USERS02';
+SQL> ALTER database datafile '/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_1.dbf' RESIZE 120M;
+SQL> ALTER tablespace users02 add datafile '/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_3.dbf' size 50M autoextend on;
+SQL> SELECT FILE_NAME,BYTES FROM dba_data_files WHERE tablespace_name='USERS02';
+
+【示例6-6】切换表空间的状态
+本示例不断切换表空间USERS02的状态，路径是：OfflineOnlineRead OnlyRead Write，并通过dba_tablespaces查询表空间USERS02的状态。
+$ sqlplus system/***@pdborcl
+SQL> ALTER tablespace users02 OFFLINE;
+SQL> SELECT tablespace_name,status FROM dba_tablespaces WHERE  tablespace_name='USERS02';
+SQL> ALTER tablespace users02 ONLINE;
+SQL> SELECT tablespace_name,status FROM dba_tablespaces WHERE  tablespace_name='USERS02';
+SQL> ALTER tablespace users02 READ ONLY;
+SQL> SELECT tablespace_name,status FROM dba_tablespaces WHERE  tablespace_name='USERS02';
+SQL> ALTER tablespace users02 READ WRITE;
+SQL> SELECT tablespace_name,status FROM dba_tablespaces WHERE  tablespace_name='USERS02';
+
+【示例6-7】删除PDBORCL中的表空间USERS02以及对应文件
+$ sqlplus system/***@pdborcl
+SQL> DROP TABLESPACE users02 INCLUDING CONTENTS AND DATAFILES;
+
+【示例6-8】增加控制文件
+Oracle缺省是两个控制文件互为备份，本示例增加一个控制文件，形成3个控制文件互为备份的局面。首先以sys登录到CDB，查询参数control_files的原始值，然后修改control_files的值，即在值的字符串中增加一个文件名称control03.ctl。
+但要注意增加了名称之后，文件本身并不存在，还需要将已有的控制文件复制为新文件control03.ctl，操作时要注意先关闭数据库，再复制。
+$ sqlplus / as sysdba
+SQL> show parameter control_files;
+SQL> ALTER SYSTEM SET
+control_files='/home/oracle/app/oracle/oradata/orcl/control01.ctl',
+'/home/oracle/app/oracle/fast_recovery_area/orcl/control02.ctl',
+'/home/oracle/app/oracle/fast_recovery_area/orcl/control03.ctl'
+SCOPE=SPFILE;
+SQL> SHUTDOWN IMMEDIATE
+SQL> host cp /home/oracle/app/oracle/fast_recovery_area/orcl/control02.ctl /home/oracle/app/oracle/fast_recovery_area/orcl/control03.ctl
+SQL> STARTUP
+SQL> show parameter control_files;
+
+【示例6-9】导出控制文件的重建命令脚本
+本示例将生成一个控制文件的跟踪文件control_trace.trc,该文件是文本文件，里面有重建控制文件的命令。生成后使用Linux的cat命令查看该文件的内容。
+$ sqlplus / as sysdba
+SQL> ALTER DATABASE BACKUP CONTROLFILE TO TRACE AS '/home/oracle/control_trace.trc';
+SQL> !cat /home/oracle/control_trace.trc
+
+【示例6-10】查看重做日志文件
+本例通过v$log查看日志文件组，通过v$logfile查看日志文件，从查询结果来看，共有三个重做日志文件组，每个组仅有一个文件。
+$ sqlplus / as sysdba
+SQL> SELECT group#,archived,status FROM v$log;
+SQL> col member format a50
+SQL> SELECT group#,member FROM v$logfile;
+
+【示例6-11】查看归档模式及归档日志文件所在目录
+本示例通过ARCHIVE LOG LIST查看数据库是否工作在归档模式，通过参数db_recover查看归档文件最大占用空间大小以及归档目录，通过v$recovery_file_dest查询归档空间的使用情况。
+SQL> ARCHIVE LOG LIST
+SQL> show parameter db_recover
+SQL> col name format a50
+SQL> SELECT NAME,SPACE_LIMIT,SPACE_USED FROM v$recovery_file_dest;
+【示例6-12】将数据库切换到归档模式。
+必须以sysdba身份登录到CDB，不能在PDB数据库中操作。登录后，首先查询一下当前的归档日志方式和参数：
+$ sqlplus / as sysdba
+SQL> ARCHIVE LOG LIST;
+SQL> SHUTDOWN IMMEDIATE
+SQL> STARTUP MOUNT
+SQL> ALTER DATABASE ARCHIVELOG;
+SQL> archive log list;
+SQL> ALTER DATABASE OPEN;
+
+【示例6-13】在重做日志文件组中增加文件
+本示例通过命令“ALTER DATABASE ADD LOGFILE MEMBER …”在重做日志文件组1中增加一个日志文件redo01_2.log，增强该文件组的可靠性。增加完成后，文件组1就有两个互为备份的文件了。
+$ sqlplus / as sysdba
+SQL> COL member FORMAT a50
+SQL> SELECT group#,member FROM v$logfile;
+SQL> ALTER DATABASE ADD LOGFILE MEMBER '/home/oracle/app/oracle/oradata/orcl/redo01_2.log' TO GROUP 1;
+SQL> SELECT group#,member FROM v$logfile;
+
+【示例6-14】增加重做日志文件组
+本示例增加一个日志文件组4，在文件组中分配两个日志文件，大小为50M。增加重做日志组成功的必要条件是这两个日志文件都不存在。
+$ sqlplus / as sysdba
+SQL> COL member FORMAT a50
+SQL> SELECT group#,member FROM v$logfile;
+SQL> ALTER DATABASE ADD LOGFILE GROUP 4 ('/home/oracle/app/oracle/oradata/orcl/redo04.log','/home/oracle/app/oracle/oradata/orcl/redo04_2.log')SIZE 50M;
+SQL> SELECT group#,member FROM v$logfile;
+
+【示例6-15】查看所有参数值
+本示例通过命令“SHOW PARAMETER SPFILE”查看参数spfile的值，该参数的值表示参数文件的全路径名称，通过“SHOW PARAMETER” 查看所有参数的值。
+SQL> SHOW PARAMETER SPFILE
+SQL> SHOW PARAMETER
+
+【示例6-16】修改CDB的系统参数
+本例修改参数db_recovery_file_dest_size的值，从4560M增加到4600M。在CDB中修改该参数，会影响整个PDB。
+$ sqlplus / as sysdba
+SQL> SHOW PARAMETER db_recovery_file_dest_size ;
+SQL> ALTER SYSTEM SET db_recovery_file_dest_size=4600M scope=both;
+SQL> show parameter db_recovery_file_dest_size ;
+
+
+【示例6-17】从spfile创建pfile
+本例从spifle中创建pfile。新创建的文件是文本文件，可以在操作系统中直接查看，这里用的是Linux的cat命令。 
+$ sqlplus / as sysdba
+SQL> CREATE PFILE='pfilesid.ora' FROM spfile;
+SQL> !cat $ORACLE_HOME/dbs/pfilesid.ora

@@ -1,0 +1,80 @@
+﻿14.3  用户创建与空间分配
+CREATE TABLESPACE Users02 
+DATAFILE 
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_1.dbf'
+  SIZE 100M AUTOEXTEND ON NEXT 256M MAXSIZE UNLIMITED，
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_2.dbf' 
+  SIZE 100M AUTOEXTEND ON NEXT 256M MAXSIZE UNLIMITED
+EXTENT MANAGEMENT LOCAL SEGMENT SPACE MANAGEMENT AUTO;
+
+CREATE USER STUDY IDENTIFIED BY 123 
+DEFAULT TABLESPACE "USERS"
+TEMPORARY TABLESPACE "TEMP";
+
+-- QUOTAS
+ALTER USER STUDY QUOTA UNLIMITED ON USERS;
+ALTER USER STUDY QUOTA UNLIMITED ON USERS02;
+
+-- ROLES
+GRANT "CONNECT" TO STUDY WITH ADMIN OPTION;
+GRANT "RESOURCE" TO STUDY WITH ADMIN OPTION;
+ALTER USER STUDY DEFAULT ROLE "CONNECT"，"RESOURCE";
+
+-- SYSTEM PRIVILEGES
+GRANT CREATE VIEW TO STUDY WITH ADMIN OPTION;
+
+
+14.7  数据库测试
+【示例14-1】调用程序包中的函数
+调用MyPack.Get_SaleAmount()函数，计算部门11的销售总金额。
+$ sqlplus study/***@pdborcl
+SQL> SELECT MyPack.Get_SaleAmount(11)AS 部门11应收金额 FROM dual;
+函数Get_SaleAmount()测试方法：
+SELECT count(*)FROM orders;
+SELECT MyPack.Get_SaleAmount(11)AS 部门11应收金额，MyPack.Get_SaleAmount(12)AS 部门12应收金额 FROM dual;
+
+【示例14-2】调用程序包中的过程
+在SQL-DEVELOPER中调用MYPACK.Get_Employees()过程，输出1号员工的所有下属及子下属。
+set serveroutput on
+DECLARE
+  V_EMPLOYEE_ID NUMBER;    
+BEGIN
+  V_EMPLOYEE_ID：= 1;
+  MYPACK.Get_Employees (V_EMPLOYEE_ID => V_EMPLOYEE_ID);  
+  V_EMPLOYEE_ID：= 11;
+  MYPACK.Get_Employees (V_EMPLOYEE_ID => V_EMPLOYEE_ID);    
+END;
+/
+【示例14-3】调用过程分页查询员工表
+本示例调用过程MYPACK.Get_EmployeeByPage_P查询员工表的第1页(每页3个员工)。
+SQL> 
+set serveroutput on
+declare
+rc sys_refcursor;
+lrow employees%rowtype; 
+begin
+MYPACK.Get_EmployeeByPage_P(1，3，rc);    
+    loop
+      FETCH rc INTO lrow;
+      exit when rc%notfound;      
+      DBMS_OUTPUT.put_line (lrow.employee_id || '  '|| lrow.name);
+    end loop;
+    CLOSE rc;    --关闭游标
+ end;
+ /
+
+【示例14-4】直方图统计前后的对比查询
+$ sqlplus study/***@pdborcl
+SQL> EXEC dbms_stats.delete_schema_stats(User);
+SQL> SELECT ORDER_ID，ORDER_DATE，TRADE_RECEIVABLE FROM ORDERS WHERE TRADE_RECEIVABLE BETWEEN 10000 AND 11000;
+SQL> explain plan for SELECT ORDER_ID，ORDER_DATE，TRADE_RECEIVABLE FROM ORDERS WHERE TRADE_RECEIVABLE BETWEEN 10000 AND 11000;
+Explained.
+SQL> SELECT * FROM table(dbms_xplan.display); 
+SQL> EXEC dbms_stats.gather_schema_stats(User，method_opt=>'for all columns SIZE 250'，cascade=>TRUE);
+SQL> explain plan for SELECT ORDER_ID，ORDER_DATE，TRADE_RECEIVABLE FROM ORDERS WHERE TRADE_RECEIVABLE BETWEEN 10000 AND 11000;
+SQL> SELECT * FROM table(dbms_xplan.display);
+
+在本例最后，通过查询user_tables查看每个用户表的统计情况：
+SQL> COL TABLE_NAME FORMAT A20
+SQL> COL TABLESPACE_NAME FORMAT A20
+SQL> SELECT table_name，tablespace_name，num_rows FROM user_tables;

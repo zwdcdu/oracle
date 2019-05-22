@@ -1,0 +1,94 @@
+﻿本文件描述 apache-tomcat-7.0.81在CentOS中的安装过程
+以及小型端口销售系统的安装过程.
+开机后,可以在浏览器中打开以下两个网站:
+tomcat的主页:
+http://localhost:8080
+http://localhost:8080/HssProject/login.jsp
+
+下面开始安装apache-tomcat-7.0.81:
+
+#cd /usr/local
+wget http://apache.fayea.com/tomcat/tomcat-7/v7.0.81/bin/apache-tomcat-7.0.81.tar.gz
+tar -xvf apache-tomcat-7.0.81.tar.gz
+rm apache-tomcat-7.0.81.tar.gz
+cd /usr/local/apache-tomcat-7.0.81/bin/
+运行./startup.up
+打开浏览器测试:localhost:8080
+
+
+编辑新的启动文件 /etc/init.d/tomcat:
+编辑完成后:
+#chmod 755 tomcat
+#service tomcat start
+#chkconfig tomcat on
+
+vi /etc/init.d/tomcat
+-------------------------------------------------------------------------------------------------------
+#!/bin/bash    
+#    
+# tomcat startup script for the Tomcat server    
+#    
+# chkconfig: 345 80 20    
+# description: start the tomcat deamon    
+#    
+# Source function library    
+. /etc/rc.d/init.d/functions    
+
+prog=tomcat8   
+JAVA_HOME=/usr/local/jdk1.8.0_121
+export JAVA_HOME    
+CATALANA_HOME=/usr/local/apache-tomcat-8.5.20
+export CATALINA_HOME    
+
+case "$1" in    
+start)    
+echo "Starting Tomcat..."    
+$CATALANA_HOME/bin/startup.sh    
+;;    
+
+stop)    
+echo "Stopping Tomcat..."    
+$CATALANA_HOME/bin/shutdown.sh    
+;;    
+
+restart)    
+echo "Stopping Tomcat..."    
+$CATALANA_HOME/bin/shutdown.sh    
+sleep 2    
+echo    
+echo "Starting Tomcat..."    
+$CATALANA_HOME/bin/startup.sh    
+;;    
+
+*)    
+echo "Usage: $prog {start|stop|restart}"    
+;;    
+esac    
+exit 0    
+-------------------------------------------------------------------------------------------------------
+注意:不通过daemon.sh安装自动启动,要报错!
+不要做这个工作:tar -zxvf commons-daemon-native.tar.gz
+
+
+接下来安装HssProject小型商品管理系统
+1.将HssProject.war 复制到 /usr/local/apache-tomcat-8.5.20/webapps中,系统会自动生成HssProject文件夹
+
+2.然后,编辑/usr/local/apache-tomcat-8.5.20/conf/server.xml
+在<Host ...>下添加 :
+<Context docBase="/usr/local/apache-tomcat-8.5.20/webapps/HssProject.war" path="/HssProject" reloadable="true"/>
+
+3.打开网站测试:
+http://localhost:8080/HssProject/login.jsp
+
+4.如果网站可以使用，但反应很慢。
+应该设置tomcat的bin/catalina.sh
+在bin/catalina.sh的第二行加一行即可：
+export CATALINA_OPTS="-Djava.security.egd=file:/dev/./urandom"
+参见：http://www.cnblogs.com/zhangzihong/p/6886197.html
+
+
+注意：war包中的数据库配置文件为:
+/usr/local/apache-tomcat-8.5.20/webapps/HssProject/WEB-INF/classes/jdbc.properties
+其中的数据库地址为oracle-pc,和主机名称相同，不需要作修改
+jdbc.url=jdbc:oracle:thin:@//oracle-pc:1521/pdborcl
+/usr/local/apache-tomcat-8.5.20/webapps/HssProject/WEB-INF/classes/hibernate.cfg.xml中的数据库IP地址也是oracle-pc

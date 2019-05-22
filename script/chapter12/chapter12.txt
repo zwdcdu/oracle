@@ -1,0 +1,817 @@
+﻿12.1.2  变量和常量
+【示例12-1】声明一个变量sname,初始化值是eric。
+SET SERVEROUTPUT ON;
+DECLARE
+sname VARCHAR2(20):='eric';  
+BEGIN
+sname：=sname||' and tom';  
+dbms_output.put_line(sname);  
+END;
+/
+
+
+【示例12-2】使用SELECT…INTO语句对变量sname赋值。
+SET SERVEROUTPUT ON
+DECLARE
+sname VARCHAR2(20)DEFAULT 'John';  
+BEGIN
+ SELECT first_name INTO sname FROM employees WHERE EMPLOYEE_ID =201;
+ dbms_output.put_line(sname);
+END;
+ /
+
+
+【示例12-3】使用RETURNING子句。
+操作HR用户中工作表JOBS,使用RETURNING子句返操作后的数据。
+SET SERVEROUTPUT ON
+DECLARE  v_id VARCHAR2(10);
+BEGIN
+   INSERT INTO jobs VALUES ('IT_EXPL','Programmer Test',5000,12000)
+      RETURNING job_id INTO v_id;
+      DBMS_OUTPUT.PUT_LINE('INSERT：' || v_id);
+   v_id：= NULL;
+   UPDATE jobs SET job_id='IT_TEST' WHERE job_id='IT_EXPL' 
+      RETURNING job_id INTO v_id;
+      DBMS_OUTPUT.PUT_LINE('UPDATE：' || v_id);
+   v_id：= NULL;
+   FROM jobs WHERE job_id='IT_TEST' 
+      RETURNING job_id INTO v_id;
+      DBMS_OUTPUT.PUT_LINE('DELETE：' || v_id);
+END;
+/
+
+
+【示例12-4】已知圆半径为3,圆周率为3.14,计算圆面积。
+SET SERVEROUTPUT ON
+DECLARE
+  pi CONSTANT number:=3.14;   --圆周率长值  
+  r  number  DEFAULT  3;   --圆的半径默认值3  
+  area  number;   --面积。
+BEGIN
+  area：=pi*r*r;   --计算面积
+  dbms_output.put_line(area);  --输出圆的面积
+END;
+  /
+ 
+
+12.1.3  可变数组
+【示例12-5】用可变数组实现杨辉三角形的打印。
+本示例输出杨辉三角,定义了数组类型T_NUMBER,以及相应的数组变量ROWARRAY,变量N表示输出的行数。
+本算法是从第一行开始,逐行打印,每一行的数字存储在数组变量ROWARRAY中,数组元素的值是从按右到
+左的顺序生成的。
+SET SERVEROUTPUT ON;
+DECLARE
+TYPE T_NUMBER IS VARRAY (100)OF INTEGER NOT NULL; --数组
+I INTEGER;
+J INTEGER;
+SPACES VARCHAR2(30)：='   '; --三个空格,用于打印时分隔数字
+N INTEGER：= 9; -- 一共打印9行数字
+ROWARRAY T_NUMBER：= T_NUMBER();
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('1'); --先打印第1行
+   DBMS_OUTPUT.PUT(RPAD(1,9,' '));--先打印第2行
+   DBMS_OUTPUT.PUT(RPAD(1,9,' '));--打印第一个1
+   DBMS_OUTPUT.PUT_LINE(''); --打印换行
+   --初始化数组数据
+   FOR I IN 1 .. N LOOP
+      ROWARRAY.EXTEND;
+   END LOOP;
+   ROWARRAY(1)：=1;
+   ROWARRAY(2)：=1;    
+   FOR I IN 3 .. N --打印每行,从第3行起
+   LOOP
+      ROWARRAY(I)：=1;    
+      J：=I-1;
+    --准备第J行的数组数据,第J行数据有J个数字,第1和第J个数字为1
+    --这里从第J-1个数字循环到第2个数字,顺序是从右到左
+      WHILE J>1 
+      LOOP
+         ROWARRAY(J)：=ROWARRAY(J)+ROWARRAY(J-1);
+         J：=J-1;
+      END LOOP;
+     --打印第I行
+      FOR J IN 1 .. I
+      LOOP
+         DBMS_OUTPUT.PUT(RPAD(ROWARRAY(J),9,' '));--打印第一个1
+      END LOOP;
+      DBMS_OUTPUT.PUT_LINE(''); --打印换行
+   END LOOP;
+END;
+/
+
+
+12.1.4  运算符
+【示例12-6】表达式求值
+本示例计算表达式的值为6.5,并转化为整数(integer)输出,结果是7。
+set serveroutput on
+DECLARE
+   result integer;
+BEGIN
+   result：=1+3*5/2-MOD(12,5);
+   dbms_output.put_line('运算结果是：'||result);
+END;
+/
+【示例12-7】查询Den的工资,如果大于5000元,则发奖金800元。
+DECLARE
+      newSal EMPLOYEES.SALARY%TYPE;
+ BEGIN
+      SELECT SALARY INTO newSal FROM EMPLOYEES
+      WHERE FIRST_NAME='Den';
+      IF newSal>5000 THEN  
+           UPDATE EMPLOYEES
+           SET SALARY=SALARY+800
+           WHERE FIRST_NAME='Den';
+      END IF;
+      COMMIT ;
+END;
+/
+
+
+【示例12-8】查询Den的工资,如果大于8000元,则发奖金1000元,如果大于5000元,则发奖金800元,否则发奖金400元。
+DECLARE
+      newSal EMPLOYEES.SALARY%TYPE;
+BEGIN
+      SELECT SALARY INTO newSal FROM EMPLOYEES
+      WHERE FIRST_NAME='Den';
+      IF newSal>8000 THEN  
+           UPDATE EMPLOYEES
+           SET SALARY=SALARY+1000
+           WHERE FIRST_NAME='Den';
+ELSIF newSal>5000 THEN      
+           UPDATE EMPLOYEES
+           SET SALARY=SALARY+800
+           WHERE FIRST_NAME='Den';
+ELSE
+         UPDATE EMPLOYEES SET SALARY=SALARY+400
+           WHERE FIRST_NAME='Den';
+      END IF;
+      COMMIT;  
+END;
+/
+
+
+【示例12-9】输入一个字母A、B、C分别输出对应的级别信息。
+SET SERVEROUTPUT ON
+DECLARE
+      v_grade CHAR(1)：=UPPER('&grade');  
+BEGIN
+      CASE v_grade  
+           WHEN 'A' THEN
+               dbms_output.put_line('Excellent');
+           WHEN 'B' THEN
+               dbms_output.put_line('Very Good');
+           WHEN 'C' THEN
+               dbms_output.put_line('Good');
+           ELSE
+               dbms_output.put_line('No such grade');
+      END CASE;
+END;
+/
+
+
+12.1.6  循环
+【示例12-10】用LOOP循环结构计算1+2+3+…+100的值。
+DECLARE
+   counter number(3)：=0;
+   sumResult number：=0;
+BEGIN
+   LOOP 
+      counter：= counter+1;
+      sumResult：= sumResult+counter;
+      IF counter>=100 THEN  
+         EXIT;
+      END IF;
+      --EXIT WHEN counter>=100;  
+   END LOOP;
+   dbms_output.put_line('result is：'||to_char(sumResult));
+END;
+/
+
+
+
+【示例12-11】用WHILE循环结构计算1+2+3+…+100的值。
+DECLARE
+   counter number(3)：=0;
+   sumResult number：=0;
+BEGIN
+   WHILE counter<100 LOOP 
+      counter：= counter+1;
+      sumResult：= sumResult+counter;
+   END LOOP;
+   dbms_output.put_line('result is：'||sumResult);
+END;
+/
+
+
+【示例12-12】用FOR循环结构计算1+2+3+…+100的值。
+DECLARE
+   counter number(3)：=0;
+   sumResult number：=0;
+BEGIN
+   FOR counter IN 1..100 LOOP 
+      sumResult：= sumResult+counter;
+   END LOOP;
+   dbms_output.put_line('result is：'||sumResult);
+END;
+/
+
+
+
+12.2.1  预定义异常
+【示例12-13】异常处理
+DECLARE
+   newSal employees.salary % TYPE;
+BEGIN
+   SELECT salary INTO newSal FROM employees;
+   EXCEPTION
+   WHEN TOO_MANY_ROWS THEN
+      dbms_output.put_line('返回的记录太多了');
+   WHEN OTHERS THEN
+      dbms_output.put_line('未知异常');
+END;
+/
+
+
+12.2.2  自定义异常
+【示例12-14】自定义异常
+SET SERVEROUTPUT ON
+DECLARE
+   sal employees.salary %TYPE;
+   MYEXP EXCEPTION;
+BEGIN
+   SELECT salary INTO sal FROM employees WHERE first_name='Valli';
+   IF sal<5000 THEN
+     RAISE MYEXP;
+   END IF;
+   EXCEPTION
+   WHEN NO_DATA_FOUND THEN
+      dbms_output.put_line ('NO RECORDSET FIND!');
+   WHEN MYEXP THEN  
+      dbms_output.put_line ('SAL IS TO LESS!');
+END;
+/
+
+
+12.2.3  引发应用程序异常
+【示例12-15】引发系统异常
+DECLARE
+   sal employees.salary %TYPE;
+   myexp EXCEPTION;
+BEGIN
+   SELECT salary INTO sal FROM employees WHERE first_name='Valli';
+   IF sal<5000 THEN
+      RAISE myexp;
+   END IF;
+   EXCEPTION
+   WHEN NO_DATA_FOUND THEN
+      dbms_output.put_line ('NO RECORDSET FIND!');
+   WHEN MYEXP THEN
+      RAISE_APPLICATION_ERROR(-20001,'SAL IS TO LESS!');
+END;
+/
+
+
+【示例12-16】PRAGMA EXCEPTION_INIT异常
+本示例是SCOTT用户登录,查询表emp,在测试的时候,通过输入替换变量&empno不同的值,观察不同的异常处理。
+7369员工的comm为空,抛出了异常null_salary,7499员工的comm不为空,因此正常输出。
+SQL>
+<<outterseg>>
+   DECLARE
+   null_salary EXCEPTION;
+   PRAGMA EXCEPTION_INIT(null_salary,-20101);
+BEGIN
+   <<innerStart>>
+      DECLARE
+      curr_comm NUMBER;
+   BEGIN
+      SELECT comm INTO curr_comm FROM emp WHERE empno = &empno;
+      IF curr_comm IS NULL THEN    
+         RAISE_APPLICATION_ERROR(-20101,'Salary is missing');
+      ELSE
+         dbms_output.put_line('有津贴');
+      END IF;
+   END;
+   EXCEPTION
+   WHEN NO_DATA_FOUND THEN
+      dbms_output.put_line('没有发现行');
+   WHEN null_salary THEN
+      dbms_output.put_line('津贴未知');
+   WHEN OTHERS THEN
+      dbms_output.put_line('未知异常');
+END;
+SQL>/
+Enter value for empno：7369
+
+SQL> //
+Enter value for empno：7499
+
+
+12.3.1  游标的基本操作
+
+【示例12-17】用游标提取EMPLOYEES表中一个职员信息。
+SET SERVEROUTPUT ON
+DECLARE
+   v_fname VARCHAR2(10);
+   v_lname VARCHAR2(10);
+   v_salary employees.salary%TYPE;
+   CURSOR emp_cursor --声明一个名称为emp_cursor的游标
+    IS SELECT first_name,last_name,salary FROM employees;
+   BEGIN
+   OPEN emp_cursor; --打开游标
+   --利用FETCH语句从结果集中提取指针指向的当前行记录。
+   FETCH emp_cursor INTO v_fname,v_lname,v_salary;
+        DBMS_OUTPUT.PUT_LINE(v_fname||','||v_lname||','|| v_salary);
+   CLOSE emp_cursor; --关闭游标
+END;
+/
+
+
+【示例12-18】提取EMPLOYEES表中所有职员信息。
+本示例使用LOOP语句循环提取每一行数据,直到所有数据取完,
+判断游标数据取完的语句是“EXIT WHEN emp_cursor%NOTFOUND;”,
+这条语句使用了%NOTFOUND游标属性,表示如果没有找到数据,就退出循环。
+SET SERVEROUTPUT ON
+DECLARE
+   v_fname VARCHAR2(100);
+   v_lname VARCHAR2(100);
+   v_salary employees.salary%TYPE;
+   CURSOR emp_cursor --声明一个名称为emp_cursor的游标
+      IS SELECT first_name,last_name,salary FROM employees;
+BEGIN
+   OPEN emp_cursor; --打开游标
+   LOOP
+      --利用FETCH语句从结果集中提取指针指向的当前行记录。
+      FETCH emp_cursor INTO v_fname,v_lname,v_salary;
+      EXIT WHEN emp_cursor%NOTFOUND;
+      DBMS_OUTPUT.PUT_LINE(v_fname||','||v_lname||','|| v_salary);
+   END LOOP;
+   CLOSE emp_cursor;--关闭游标
+END;
+/
+
+
+12.3.2  游标FOR循环
+游标的FOR IN方式是游标使用的快捷方式,在实现同样的功能情况下,语句更简单。
+这种方式游标会自动打开,自动取所有数据,自动关闭。
+【示例12-19】使用FOR循环提取EMPLOYEES表中所有职员信息。
+SET SERVEROUTPUT ON  
+BEGIN  
+   FOR v in (SELECT first_name,last_name,salary FROM employees)
+   LOOP      
+      DBMS_OUTPUT.PUT_LINE(v.first_name||','
+        ||v.last_name||','|| v.salary);  
+   END LOOP;
+END;
+/
+
+
+12.3.3  引用游标
+【示例12-20】使用引用游标分页提取EMPLOYEES表的记录。
+本示例使用引用游标提取EMPLOYEES表中第二页的记录。其中rc变量是引用游标变量,该变量与v_sql语句动态绑定,
+之所以称为“动态”,是因为v_sql语句中有绑定变量v_offset,v_ pagesize,这两个变量的值是可以动态改变的,
+如果将这个示例应用于实际的应用程序中,可以让用户方便地分页查询表的记录。
+SET SERVEROUTPUT ON
+DECLARE
+   rc SYS_REFCURSOR;
+   v_pagesize number;
+   v_pageidx number;
+   v_offset number;
+   v_sql varchar2(2000);
+   lrow employees%rowtype; 
+BEGIN
+   v_pagesize：=3;--每页3条记录
+   v_pageidx：=2;--取第二页数据
+   v_offset：=v_pagesize*(v_pageidx-1);
+   v_sql：='select * from employees offset：v_offset rows 
+      fetch next：v_pagesize rows only';
+   OPEN rc FOR v_sql using v_offset,v_pagesize; 
+   LOOP
+      FETCH rc INTO lrow;
+      EXIT WHEN rc%NOTFOUND;      
+      DBMS_OUTPUT.PUT_LINE(lrow.employee_id ||
+         '  '|| lrow.first_name);
+   END LOOP;
+   CLOSE rc;    --关闭游标
+END;
+/
+
+
+12.3.4  修改或删除游标结果集
+【示例12-21】使用游标修改MYEMP表的记录。
+本示例使用游标逐行修改MYEMP表每行的salary,在原值的基础上加100。
+MYEMP表是employees表的一个副本,可以通过命令“CREATE TABLE myemp AS SELECT * FROM employees;”创建。
+SET SERVEROUTPUT ON
+DECLARE
+   CURSOR cur --声明游标cur
+      IS SELECT employee_id,salary FROM myemp FOR UPDATE OF salary;
+BEGIN
+   FOR rec1 IN cur
+   LOOP
+      UPDATE myemp SET salary=salary+100 WHERE CURRENT OF cur;
+   END LOOP;
+END;
+/
+
+
+【示例12-22】删除MYEMP的奇数行。
+本示例删除MYEMP表的奇数行。用变量R表示行号。由于这个逻辑比较复杂,这个任务用一条DELETE语句无法完成。
+SET SERVEROUTPUT ON
+DECLARE
+   R NUMBER;
+   CURSOR cur --声明游标cur
+      IS SELECT employee_id,salary FROM myemp FOR UPDATE OF salary;
+BEGIN
+   R：=1;
+   for rec1 in cur
+   loop
+      IF R MOD 2 =1 THEN
+         DELETE myemp WHERE CURRENT OF cur;
+      END IF;
+      R：=R+1;
+   end loop;
+END;
+/
+
+12.4.1  创建存储过程
+【示例12-23】删除指定员工记录。
+CREATE OR REPLACE PROCEDURE DelEmp
+ (v_empno IN employees.employee_id%TYPE)
+AS
+   No_result EXCEPTION;
+BEGIN
+   DELETE FROM employees WHERE employee_id = v_empno;
+   IF SQL%NOTFOUND THEN
+      RAISE no_result;
+   END IF;
+   DBMS_OUTPUT.PUT_LINE('编码为'||v_empno||'的员工已被删除!');
+EXCEPTION
+   WHEN no_result THEN 
+      DBMS_OUTPUT.PUT_LINE('温馨提示：你需要的数据不存在!');
+   WHEN OTHERS THEN
+      DBMS_OUTPUT.PUT_LINE(SQLCODE||'---'||SQLERRM);
+END DelEmp;
+
+
+【示例12-24】插入员工记录：
+CREATE OR REPLACE PROCEDURE InsertEmp(
+   v_empno     in employees.employee_id%TYPE,
+   v_firstname in employees.first_name%TYPE,
+   v_lastname  in employees.last_name%TYPE,
+   v_deptno    in employees.department_id%TYPE
+   )
+AS
+   empno_remaining EXCEPTION;
+   PRAGMA EXCEPTION_INIT(empno_remaining,-1);
+   /* -1 是违反唯一约束条件的错误代码 */
+BEGIN
+   INSERT INTO EMPLOYEES(EMPLOYEE_ID,FIRST_NAME,LAST_NAME,
+      HIRE_DATE,DEPARTMENT_ID)
+   VALUES(v_empno,v_firstname,v_lastname,sysdate,v_deptno);
+   DBMS_OUTPUT.PUT_LINE('温馨提示：插入数据记录成功!');
+EXCEPTION
+   WHEN empno_remaining THEN 
+      DBMS_OUTPUT.PUT_LINE('温馨提示：违反数据完整性约束!');
+   WHEN OTHERS THEN
+      DBMS_OUTPUT.PUT_LINE(SQLCODE||'---'||SQLERRM);
+END InsertEmp;
+
+
+【示例12-25】使用存储过程向DEPARTMENTS表中插入数据。
+CREATE OR REPLACE PROCEDURE insert_dept
+   (v_dept_id IN departments.department_id%TYPE,
+   v_dept_name IN departments.department_name%TYPE,
+   v_mgr_id IN departments.manager_id%TYPE,
+   v_loc_id IN departments.location_id%TYPE)
+IS
+   ept_null_error EXCEPTION;
+   PRAGMA EXCEPTION_INIT(ept_null_error,-1400);
+   ept_no_loc_id EXCEPTION;
+   PRAGMA EXCEPTION_INIT(ept_no_loc_id,-2291);
+BEGIN
+   INSERT INTO departments
+   (department_id,department_name,manager_id,location_id)
+   VALUES
+   (v_dept_id,v_dept_name,v_mgr_id,v_loc_id);
+   DBMS_OUTPUT.PUT_LINE('插入部门'||v_dept_id||'成功');
+EXCEPTION
+   WHEN DUP_VAL_ON_INDEX THEN
+      RAISE_APPLICATION_ERROR(-20000,'部门编码不能重复');
+   WHEN ept_null_error THEN
+      RAISE_APPLICATION_ERROR(-20001,'部门编码、部门名称不能为空');
+   WHEN ept_no_loc_id THEN
+      RAISE_APPLICATION_ERROR(-20002,'没有该地点');
+END insert_dept;
+
+
+12.4.2  调用存储过程
+【示例12-26】查询指定员工记录的存储过程的创建与调用
+本过程中有3个参数,v_empno是输入类型,其他两个是输出类型,用于接收存储查询的两个结果值。
+CREATE OR REPLACE PROCEDURE QueryEmp
+   (v_empno IN  employees.employee_id%TYPE,
+   v_ename OUT employees.first_name%TYPE,
+   v_sal OUT employees.salary%TYPE)
+AS
+BEGIN
+   SELECT last_name || last_name,salary INTO v_ename,v_sal 
+   FROM employees WHERE employee_id = v_empno; 
+   DBMS_OUTPUT.PUT_LINE('温馨提示：编码为'||v_empno||'的员工已经查到!');
+EXCEPTION
+   WHEN NO_DATA_FOUND THEN 
+      DBMS_OUTPUT.PUT_LINE('温馨提示：你需要的数据不存在!');
+      WHEN OTHERS THEN 
+      DBMS_OUTPUT.PUT_LINE(SQLCODE||'---'||SQLERRM);
+END QueryEmp;
+/
+--调用
+ DECLARE
+    v1 employees.first_name%TYPE;
+    v2 employees.salary%TYPE;
+ BEGIN
+   QueryEmp(100,v1,v2);
+   DBMS_OUTPUT.PUT_LINE('姓名：'||v1);
+   DBMS_OUTPUT.PUT_LINE('工资：'||v2);
+END;
+/
+
+
+
+12.5.1  函数的创建与调用
+【示例12-27】使用函数获取某部门的工资总和
+本示例创建get_salary()函数获取部门Dept_No的工资总和,通过RETURN返回Number类型的值。
+最后,通过SQL语句查询10号部门的工资总和。
+CREATE OR REPLACE FUNCTION get_salary(Dept_no NUMBER)
+RETURN NUMBER 
+IS
+  V_sum NUMBER;
+BEGIN
+  SELECT SUM(SALARY)INTO V_sum
+    FROM EMPLOYEES WHERE DEPARTMENT_ID=dept_no;
+  RETURN v_sum;
+EXCEPTION
+   WHEN NO_DATA_FOUND THEN 
+      DBMS_OUTPUT.PUT_LINE('你需要的数据不存在!');
+   WHEN OTHERS THEN 
+      DBMS_OUTPUT.PUT_LINE(SQLCODE||'---'||SQLERRM);
+END get_salary;
+/
+
+SQL> SELECT get_salary(10)FROM dual;
+
+
+12.5.2  函数参数的调用形式
+
+【示例12-28】get_salary()函数的两种参数传递方式
+本示例在PL/SQL中使用函数,并使用了两种参数传传递方式。
+DECLARE
+   v NUMBER;
+BEGIN
+   v：=get_salary(10);
+   v：=get_salary(dept_no=>10);
+END;
+
+
+12.7  块内存储过程和函数
+【示例12-29】定义块内的存储过程
+建立本地过程,用于计算指定部门的工资总和,并统计其中的职工数量。
+DECLARE
+   V_num NUMBER;
+   V_sum NUMBER(8,2);
+   PROCEDURE proc_demo(
+     Dept_no NUMBER DEFAULT 10,
+     Sal_sum OUT NUMBER,
+     Emp_count OUT NUMBER
+   )
+   IS
+   BEGIN
+      SELECT SUM(salary),COUNT(*)INTO sal_sum,emp_count 
+      FROM employees WHERE department_id=dept_no;
+   EXCEPTION
+      WHEN NO_DATA_FOUND THEN 
+         DBMS_OUTPUT.PUT_LINE('你需要的数据不存在!');
+      WHEN OTHERS THEN 
+         DBMS_OUTPUT.PUT_LINE(SQLCODE||'---'||SQLERRM);
+   END proc_demo;
+BEGIN
+   --调用块内过程Proc_demo
+   Proc_demo(30,v_sum,v_num);
+   DBMS_OUTPUT.PUT_LINE('30号部门工资总和：'||v_sum||',人数：'
+      ||v_num);
+   Proc_demo(sal_sum => v_sum,emp_count => v_num);
+   DBMS_OUTPUT.PUT_LINE('10号部门工资总和：'||v_sum||',人数：'
+      ||v_num);
+END;
+/
+
+
+12.9.1  创建包
+【示例12-30】定义test_pkg包的声明部分
+CREATE OR REPLACE PACKAGE test_pkg
+IS
+   PROCEDURE update_sal(e_name VARCHAR2,newsal NUMBER);
+   FUNCTION ann_income(e_name VARCHAR2)RETURN NUMBER;
+END test_pkg;
+在test_pkg包定义了update_sal()存储过程和ann_income()函数。
+2)创建包主体
+CREATE [OR REPLACE] PACKAGE BODY package_name
+IS|AS
+   [Public type and item declarations]
+   [Subprogram bodies]
+BEGIN
+   [Initialization_statements]
+END [package_name];
+
+
+【示例12-31】实现test_pkg包体部分
+CREATE OR REPLACE PACKAGE BODY test_pkg
+IS
+   PROCEDURE update_sal(e_name VARCHAR2,newsal NUMBER)
+   IS
+   BEGIN
+      UPDATE employees SET salary=newsal WHERE first_name=e_name;
+   END;
+   FUNCTION ann_income(e_name VARCHAR2)
+      RETURN NUMBER IS
+      annsal NUMBER;
+   BEGIN
+      SELECT salary+2000 INTO annsal FROM employees
+      WHERE first_name=e_name;
+      RETURN annsal;
+   END;
+END test_pkg;
+
+
+
+12.10.1  创建触发器
+【示例12-32】用触发器限制对表的修改
+本示例创建表级触发器tr_dept_time,只允许对DEPARTMENTS表在工作时间内进行DML操作
+(包括INSERT,DELETE,UPDATE),如果在非工作时间进行操作,将会产生异常。
+CREATE OR REPLACE TRIGGER tr_dept_time
+   BEFORE INSERT OR DELETE OR UPDATE 
+   ON departments
+BEGIN
+   IF (TO_CHAR(sysdate,'DAY')IN ('星期六','星期日'))OR 
+      (TO_CHAR(sysdate,'HH24：MI')NOT BETWEEN '08：30' AND '18：00')
+   THEN
+      RAISE_APPLICATION_ERROR(-20001,'不是上班时间,
+      不能修改departments表');
+   END IF;
+END;
+/
+
+下面测试一下触发器的效果,在星期六运行：
+SQL> !date
+SQL> UPDATE departments SET manager_id=manager_id;
+
+
+
+【示例12-33】实现在视图上完成DELETE操作
+本示例创建视图emp_view,通过删除视图记录,自动删除对应的EMPLOYEES表中的记录。
+CREATE OR REPLACE VIEW emp_view AS 
+   SELECT department_id ,count(*)total_employeer,sum(SALARY)
+   total_salary 
+   FROM employees GROUP BY department_id;
+
+
+在此视图中直接删除是非法的：
+SQL>DELETE FROM emp_view WHERE department_id =20;
+
+但是我们可以创建INSTEAD_OF触发器来为DELETE操作执行所需的处理,即删除employees表中所有基准行：
+CREATE OR REPLACE TRIGGER emp_view_delete
+   INSTEAD OF DELETE ON emp_view FOR EACH ROW
+BEGIN
+   DELETE FROM employees WHERE department_id =：old.department_id;
+END emp_view_delete; 
+
+测试删除emp_view视图的行记录：
+SQL>DELETE FROM emp_view WHERE department_id=20;
+
+
+【示例12-34】向复杂视图插入数据。
+本示例创建视图V_REG_COU和触发器TR_I_O_REG_COU,向视图V_REG_COU插入一行数据,
+实际结果是如果region_id在REGIONS表中不存在,会自动向REGIONS表插入一条数据;
+如果country_id在COUNTRIES表中不存在,会自动向COUNTRIES表插入一条数据;
+CREATE OR REPLACE FORCE VIEW "HR"."V_REG_COU"
+   ("R_ID","R_NAME","C_ID","C_NAME")
+AS
+   SELECT r.region_id,r.region_name,c.country_id,c.country_name
+      FROM regions r,countries c
+      WHERE r.region_id = c.region_id;
+创建触发器：
+CREATE OR REPLACE TRIGGER "HR"."TR_I_O_REG_COU" INSTEAD OF
+   INSERT ON v_reg_cou FOR EACH ROW DECLARE v_count NUMBER;
+BEGIN
+   SELECT COUNT(*)INTO v_count FROM regions 
+      WHERE region_id =：new.r_id;
+   IF v_count = 0 
+   THEN
+      INSERT INTO regions(region_id,region_name)
+         VALUES (：new.r_id,：new.r_name);
+   END IF;
+   SELECT COUNT(*)INTO v_count FROM countries 
+      WHERE country_id =：new.c_id;
+   IF v_count = 0 THEN
+      INSERT INTO countries (country_id,country_name,region_id)
+      VALUES(：new.c_id,：new.c_name,：new.r_id);
+   END IF;
+END;
+
+
+【示例12-35】创建的DDL触发器,阻止对EMPLOYEES表的删除。
+CREATE OR REPLACE TRIGGER NODROP_EMP BEFORE DROP ON SCHEMA 
+BEGIN 
+   IF SYS.DICTIONARY_OBJ_NAME='employees' 
+   THEN 
+      RAISE_APPLICATION_ERROR(-20005,'不允许能删除EMP表！');
+   END IF; 
+END; 
+/ 
+
+下面的语句通过删除EMPLOYEES表验证触发器：
+SQL>DROP TABLE employees;
+
+  
+12.10.2  触发器的管理
+【示例12-36】查看JOB_COUNT触发器的类型、触发事件及所在表名称。
+SQL>SELECT TRIGGER_TYPE,TRIGGERING_EVENT,TABLE_NAME
+FROM USER_TRIGGERS WHERE TRIGGER_NAME='JOB_COUNT';
+
+下面的代码块查看JOB_COUNT触发器的触发体
+SQL>SELECT TRIGGER_BODY FROM USER_TRIGGERS 
+WHERE TRIGGER_NAME = 'JOB_COUNT';
+ 
+12.10.3  行级触发器
+【示例12-37】行级触发器示例1
+本示例限定只对部门号为80的记录进行行级触发器操作,当对表的部门号为80的记录
+进行修改(UPDATE)或者删除(DELETE)的时候触发。
+CREATE OR REPLACE TRIGGER tr_emp_sal_comm
+   BEFORE UPDATE OF salary,commission_pct OR DELETE
+   ON employees
+   FOR EACH ROW
+   WHEN (OLD.department_id = 80)
+BEGIN
+   CASE
+   WHEN UPDATING ('salary')THEN
+      IF：NEW.salary <：OLD.salary THEN
+         RAISE_APPLICATION_ERROR(-20001,'部门80的人员的工资不能降');
+      END IF;
+   WHEN UPDATING('commission_pct')THEN
+      IF：NEW.commission_pct <：OLD.commission_pct THEN
+         RAISE_APPLICATION_ERROR(-20002,'部门80的人员的奖金不能降');
+      END IF;
+   WHEN DELETING THEN
+      RAISE_APPLICATION_ERROR(-20003,'不能删除部门80的人员记录');
+   END CASE;
+END;
+   /
+
+下面测试触发器的效果,可以正常修改112号员工,但不能修改177号员工,这是因为177号员工的部门号为80：
+SQL>UPDATE employees SET salary = 8000 WHERE employee_id = 112;
+
+SQL>UPDATE employees SET salary = 8000 WHERE employee_id = 177;
+
+SQL>DELETE FROM employees WHERE employee_id in (177,170);
+
+
+【示例12-38】行级触发器示例2
+本示例利用行触发器实现级联更新。在修改了主表REGIONS中的region_id之后(AFTER),
+自动更新子表COUNTRIES表中原来在该地区的国家的region_id。
+CREATE OR REPLACE TRIGGER tr_reg_cou
+   AFTER update OF region_id
+   ON regions
+   FOR EACH ROW
+BEGIN
+   DBMS_OUTPUT.PUT_LINE('旧的region_id值是'||:old.region_id
+      ||'、新的region_id值是'||:new.region_id);
+   UPDATE countries SET region_id =:NEW.region_id
+      WHERE region_id =:OLD.region_id;
+END;
+/
+
+
+12.10.4  系统级触发器
+【示例12-39】创建系统级触发器,记录用户登录情况
+本示例创建系统级触发器,记录PDBORCL数据库中的用户的登录信息。登录信息存储在新建表USERLOG中。
+首先以SYSTEM用户登录PDBORCL数据库,创建记录登录事件表USERLOG。
+SQL>CREATE TABLE USERLOG(USERNAME VARCHAR2(20),LOGON_TIME DATE);
+
+接下来再以SYSTEM身份创建了两个数据库级事件触发器INIT_LOGON和DATABASE_LOGON,
+其中,INIT_LOGON在数据库启动时触发,清除USERLOG表中记录的数据;DATABASE_LOGON在用户登录时触发,
+向表USERLOG中增加一条记录,记录登录用户名和登录时间。
+CREATE OR REPLACE TRIGGER INIT_LOGON 
+   AFTER STARTUP ON DATABASE 
+BEGIN
+   DELETE FROM USERLOG; 
+END;
+/
+
+CREATE OR REPLACE TRIGGER DATABASE_LOGON 
+   AFTER LOGON ON DATABASE
+BEGIN
+   INSERT INTO userlog VALUES(SYS.LOGIN_USER,SYSDATE); 
+END;
+/
+
+下面验证DATABASE_LOGON触发器,分别以HR和SCOTT用户登录后,再以SYSTEM身份执行查询：
+
+SQL>SELECT * FROM userlog;
+

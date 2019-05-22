@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application
+        xmlns="http://geronimo.apache.org/xml/ns/j2ee/application-1.2"
+        xmlns:security="http://geronimo.apache.org/xml/ns/security-1.2"
+        xmlns:sys="http://geronimo.apache.org/xml/ns/deployment-1.2">
+</application>

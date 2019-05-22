@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+    <!--切记需要写上scope=prototype(即是多例模式)-->
+    <!--显示所有部门的action-->
+   <bean id="depart" class="com.panda.action.DepartmentListAction" scope="prototype"/>
+ </beans>

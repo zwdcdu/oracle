@@ -1,0 +1,810 @@
+﻿********************************************************************************************************
+第2章 Oracle 12c的安装 训练任务
+********************************************************************************************************
+1. 在Linux环境下安装Oracle 12c
+略，见本教材在出版社的网上资源。
+2. 连接/检测Oracle 12c
+--本地连接Oracle 12c
+$ sqlplus hr/123@pdborcl
+SQL> exit
+--异地连接并访问Oracle 12c
+$ sqlplus hr/123@192.168.0.50/pdborcl
+SQL> SELECT * FROM hr.jobs;
+JOB_ID     JOB_TITLE							MIN_SALARY	MAX_SALARY
+---------- --------------------------------	----------	----------
+AD_PRES    President							20080		40000
+AD_VP      Administration Vice President		15000		30000
+...
+19 rows selected.
+SQL> exit
+
+--查看环境变量、安装目录及文件
+$ echo $ORACLE_HOME
+/home/oracle/app/oracle/product/12.1.0/dbhome_1
+$ echo $ORACLE_SID
+Orcl
+$ cd $ORACLE_HOME
+$ ls
+...
+
+--查看Oracle进程
+$ ps -ef | grep ora_
+oracle    2500     1  0 06：19 ?        00：00：00 ora_pmon_orcl
+oracle    2502     1  0 06：19 ?        00：00：03 ora_psp0_orcl
+oracle    2504     1  2 06：19 ?        00：04：27 ora_vktm_orcl
+...
+
+--查看监听器状态
+$ lsnrctl status
+...
+The command completed successfully
+
+$ lsnrctl service
+... 
+
+
+********************************************************************************************************
+第3章 网络配置及管理工具 训练任务
+********************************************************************************************************
+1. 熟悉SQL*Plus和SQL Developer两个工具的使用
+首先使用sqlplus以简单方式登录pdborcl，连接字符串是“localhost：1521/pdborcl”。登录用户是hr，登录后查询某个部门的部门总人数和平均工资。SQL语句中定义了绑定变量dn，表示需要查询的一个部门。
+$ sqlplus hr/123@localhost：1521/pdborcl
+SQL> col department_name format a30
+SQL> var dn varchar2(100)
+SQL> EXEC：dn：= 'Sales';
+PL/SQL procedure successfully completed.
+SQL> SELECT department_name，count(e.job_id)as "部门总人数"，avg(e.salary)as "平均工资" FROM departments d，employees e WHERE
+d.department_id=e.department_id and department_name=：dn GROUP BY department_name;
+DEPARTMENT_NAME					部门总人数		平均工资
+----------------------------	----------	----------
+Sales							34			8955.88235
+SQL> EXEC：dn：= 'IT';
+PL/SQL procedure successfully completed.
+SQL> SELECT department_name，count(e.job_id)as "部门总人数"，avg(e.salary)as "平均工资" FROM departments d，employees e WHERE  d.department_id=e.department_id and department_name=：dn GROUP BY department_name;
+DEPARTMENT_NAME				部门总人数		平均工资
+----------------------------	----------	----------
+IT							5				5760
+SQL>
+下面训练以TNS名称登录，在文件：
+$ORACLE_HOME/network/admin/tnsnames.ora中加入一个PDBORCL名称节：
+PDBORCL =
+  (DESCRIPTION =
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = localhost)(PORT = 1521))
+    )
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = pdborcl)
+    )
+  )
+然后以PDBORCL名称直接登录成功，无需主机地址、端口号和服务名称：
+$ sqlplus hr/123@pdborcl
+SQL>
+sqldeveloper工具的使用省略，见教材第3.5节：Oracle SQL Developer。
+2. 配置服务器同时工作在专用服务器模式和共享服务器模式
+略，见教材第3.2节：服务器模式和数据库连接方式。
+3. 分析SQL执行计划，执行SQL语句的优化指导
+本训练任务查询两个部门('IT'和'Sales')的部门总人数和平均工资，以下两个查询的结果是一样的。但效率不相同。
+查询1：
+SELECT d.department_name，count(e.job_id)as "部门总人数"，
+avg(e.salary)as "平均工资" 
+from hr.departments d，hr.employees e 
+where d.department_id = e.department_id
+and d.department_name in ('IT'，'Sales')
+GROUP BY department_name;
+查询2：
+SELECT d.department_name，count(e.job_id)as "部门总人数"，
+avg(e.salary)as "平均工资" 
+FROM hr.departments d，hr.employees e
+WHERE d.department_id = e.department_id
+GROUP BY department_name
+HAVING d.department_name in ('IT'，'Sales');
+查询1的执行计划如下图，其中：Cost=5，Rows=20，Predicate Information(谓词信息)中有一次索引搜索access，一次全表搜索filter。
+
+
+********************************************************************************************************
+第4章 数据库管理与配置 训练任务
+********************************************************************************************************
+1. 创建插接式数据库
+由于dbca命令的选项较多，所以先用-help选项查看一下帮助，再执行创建pdborder数据库的命令，创建100%完成之后，用管理用户sysorder登录pdborder，如果连接成功，表示创建pdborder成功了。注意，通过查询当前权限session_privs可以看出，管理用户sysorder权限很少，还需要通过system用户给它授予更多权限才行。
+$ dbca -createPluggableDatabase -help
+...
+$ dbca -silent -createPluggableDatabase -sourceDB orcl -pdbName pdborder -createPDBFrom default -pdbAdminUserName sysorder -pdbAdminPassword 123 -pdbDatafileDestination "/home/oracle/app/oracle/oradata/orcl/{PDB_NAME}" -createUserTableSpace true
+正在创建插接式数据库
+4% 已完成
+12% 已完成
+21% 已完成
+38% 已完成
+85% 已完成
+正在完成创建插接式数据库
+100% 已完成
+$ sqlplus sysorder/123@localhost/pdborder
+SQL> SELECT * FROM session_privs;
+PRIVILEGE
+----------------------------------------
+SET CONTAINER
+CREATE PLUGGABLE DATABASE
+CREATE SESSION
+注意，dbca命令是在操作系统下运行的。Pdborder数据库创建完成之后，如果要删除它，可以在操作系统下运行：
+$ dbca -silent -deletePluggableDatabase -sourceDB orcl -pdbName 
+pdborder
+2. 启动和关闭数据库
+略。参见“4.5  数据库的启动与关闭”。
+
+********************************************************************************************************
+第5章 Oracle 12c 数据库结构 训练任务
+********************************************************************************************************
+1. 增加SGA空间大小
+本任务首先通过“show parameter sga_”查看sga空间的最大值sga_max_size和当前值sga_target。可以看到都是1.5G，通过修改这两个参数将SGA值改为2G，然后重启数据库，重启之后，可以看出SGA的当前值和最大值已经变成了2G。
+$ sqlplus / as sysdba
+SQL> show parameter sga_
+NAME										TYPE		VALUE
+------------------------------------	-----------	------------------
+sga_max_size								big integer	1504M
+sga_target								big integer	1504M
+unified_audit_sga_queue_size			integer		1048576
+SQL> ALTER SYSTEM SET sga_max_size=2G scope=spfile;
+System altered.
+SQL> ALTER SYSTEM SET sga_target=2G scope=spfile;
+System altered.
+SQL> shutdown immediate
+Database closed.
+Database dismounted.
+ORACLE instance shut down.
+SQL> startup
+ORACLE instance started.
+Total System Global Area 2147483648 bytes
+Fixed Size                  2926472 bytes
+Variable Size             671090808 bytes
+Database Buffers         1291845632 bytes
+Redo Buffers               13848576 bytes
+In-Memory Area            167772160 bytes
+Database mounted.
+Database opened.
+SQL> show parameter sga_
+NAME                                 TYPE          VALUE
+---------------------------------	------------	------------------
+sga_max_size							big integer		2G
+sga_target							big integer		2G
+unified_audit_sga_queue_size		integer			1048576
+SQL>
+要注意，sga_target的值不能超过sga_max_size。sga_max_size的值不要超过物理内存。
+2. 应用In-Memory技术创建内存表
+第1步：本任务以hr用户登录，首先创建表testd，随机生成100万条记录。然后查询一小部分记录，这里是“SELECT * FROM testd WHERE  name like'99999%'”;。
+第2步：运行“set autotrace on”开始自动跟踪。运行同样的查询语句，可见“2918  consistent gets”，即一致性读的数据块数量为2918。
+第3步：通过“ALTER table testd inmemory;”修改该表为inmemory。运行同样的查询语句两次，这是由于运行第1次查询之后才会将表调入in-memory块。第二次的查询跟踪输出结果为“inmemory("NAME" LIKE '99999%')”以及“8  consistent gets”。
+第4步：对比分析。testd修改为内存表之前的一致性读的数据块数量是2918，之后是8，所以查询效率大大提高了。
+第5步：任务结束，删除这张大表testd。
+$ sqlplus hr/123@pdborcl
+SQL> CREATE TABLE testd(id int，name varchar(50));
+Table created.
+SQL>
+begin
+for i in 1..1000000 loop
+    INSERT INTO testd values(
+       i，to_char(dbms_random.random()));
+end loop;
+commit;
+end;
+/
+PL/SQL procedure successfully completed.
+SQL> SELECT * FROM testd WHERE  name like '99999%';
+        ID   NAME
+---------- --------------------------------------------------
+    940710  999999600
+SQL> set autotrace on
+SQL> SELECT * FROM testd WHERE  name like '99999%';
+...
+Predicate Information (IDENTIFIED BY operation id)：
+---------------------------------------------------
+   1 - filter("NAME" LIKE '99999%')
+
+Note
+-----
+   - dynamic statistics used：dynamic sampling (level=2)
+
+Statistics
+----------------------------------------------------------
+          0  recursive calls
+          0  db block gets
+       2918  consistent gets
+          0  physical reads
+          0  redo size
+        622  bytes sent via SQL*Net to client
+        552  bytes received via SQL*Net FROM client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          1  rows processed
+SQL> ALTER table testd inmemory;
+Table altered.
+SQL> SELECT * FROM testd WHERE  name like '99999%';
+...
+SQL> SELECT * FROM testd WHERE  name like '99999%';
+...
+Predicate Information (IDENTIFIED BY operation id)：
+---------------------------------------------------
+   1 - inmemory("NAME" LIKE '99999%')
+       filter("NAME" LIKE '99999%')
+
+Note
+-----
+   - dynamic statistics used：dynamic sampling (level=2)
+Statistics
+----------------------------------------------------------
+          0  recursive calls
+          0  db block gets
+          8  consistent gets
+          0  physical reads
+          0  redo size
+        622  bytes sent via SQL*Net to client
+        552  bytes received via SQL*Net FROM client
+          2  SQL*Net roundtrips to/from client
+          0  sorts (memory)
+          0  sorts (disk)
+          1  rows processed
+SQL> drop table testd;
+Table dropped.
+3. 维护定时作业任务
+略。参见“5.3.2  定时执行作业任务”的步骤。
+
+
+********************************************************************************************************
+第6章 数据库存储管理 训练任务
+********************************************************************************************************
+1. 新建一个用户类型表空间
+略。参见“6.2创建表空间”中的新建用户类型表空间的步骤。
+2. 在CDB/PDB中分别设置系统参数
+本任务是在CDB和pdborcl中分别修改open_cursors参数。首先以sys登录，将open_cursors修改为400，然后切换到pdborcl，将open_cursors设置为500。最后通过视图v$pdbs和pdb_spfile$联合查看pdborcl的全部自定义参数。
+$ sqlplus / as sysdba
+SQL> ALTER SYSTEM SET open_cursors=400;
+System altered.
+SQL> show parameter open_cursors
+NAME									TYPE		VALUE
+---------------------------------	----------	-----------------
+open_cursors							integer		400
+SQL> ALTER SESSION SET CONTAINER=pdborcl;
+Session altered.
+SQL> ALTER SYSTEM SET open_cursors=500;
+System altered.
+SQL> show parameter open_cursors;
+NAME									TYPE		VALUE
+---------------------------------	----------	-----------------
+open_cursors							integer		500
+SQL> col pname format a50
+SQL> col value$ format a50
+SQL> SELECT b.name as pname，b.value$ as pvalue FROM v$pdbs a，
+2 pdb_spfile$ b WHERE  a.dbid=b.pdb_uid and a.name='PDBORCL';
+PNAME											PVALUE
+----------------------------------------------	-----------------
+job_queue_processes								2
+optimizer_dynamic_sampling						2
+open_cursors										500
+db_securefile									'PREFERRED'
+
+
+********************************************************************************************************
+第7章 用户及权限管理  训练任务
+********************************************************************************************************
+1. 掌握管理角色、权根、用户的能力，并在用户之间共享对象。
+第1步：以system登录到pdborcl，创建角色con_res_view和用户new_user，并授权和分配空间：
+$ sqlplus system/***@pdborcl
+SQL> CREATE ROLE con_res_view;
+Role created.
+SQL> GRANT connect，resource，CREATE VIEW TO con_res_view;
+Grant succeeded.
+SQL> CREATE USER new_user IDENTIFIED BY 123 DEFAULT TABLESPACE users
+  2  TEMPORARY TABLESPACE temp;
+User created.
+SQL> ALTER USER new_user QUOTA 50M ON users;
+User altered.
+SQL> GRANT con_res_view TO new_user;
+Grant succeeded.
+SQL> exit
+第2步：新用户new_user连接到pdborcl，创建表mytable和视图myview，插入数据，最后将myview的SELECT对象权限授予hr用户。
+$ sqlplus new_user/123@pdborcl
+SQL> show user;
+USER is "NEW_USER"
+SQL> CREATE TABLE mytable (id number，name varchar(50));
+Table created.
+SQL> INSERT INTO mytable(id，name)VALUES(1，'zhang');
+1 row created.
+SQL> INSERT INTO mytable(id，name)VALUES (2，'wang');
+1 row created.
+SQL> CREATE VIEW myview AS SELECT name FROM mytable;
+View created.
+SQL> SELECT * FROM myview;
+NAME
+--------------------------------------------------
+zhang
+wang
+SQL> GRANT SELECT ON myview TO hr;
+Grant succeeded.
+SQL>exit
+第3步：用户hr连接到pdborcl，查询new_user授予它的视图myview
+$ sqlplus hr/123@pdborcl
+SQL> SELECT * FROM new_user.myview;
+NAME
+--------------------------------------------------
+zhang
+wang
+SQL> exit
+
+
+
+********************************************************************************************************
+第8章 数据库的对象管理 训练任务
+********************************************************************************************************
+1. 创建表和管理表
+1)创建EMPLOYEES表和DEPARTMENTS表
+SQL> CREATE TABLE employees 
+2   ( 
+3   employee_id NUMBER NOT NULL，
+4 name VARCHAR2(40)NOT NULL，
+5 email VARCHAR2(40)，
+6 phone_number VARCHAR2(40)，
+7 hire_date DATE NOT NULL，
+8 salary NUMBER(8，2)，
+9 manager_id NUMBER，
+10 department_id NUMBER，
+11  photo BLOB，
+12 CONSTRAINT "EMPLOYEES_PK" PRIMARY KEY (employee_id)
+13  )
+14  PCTFREE 10 
+15  PCTUSED 40 
+16  INITRANS 1 
+17  MAXTRANS 255 
+18  LOGGING
+19  STORAGE
+20 (
+21  INITIAL 65536 
+22  NEXT 1048576 
+23  MINEXTENTS 1 
+24  MAXEXTENTS 2147483645
+25 )
+26 TABLESPACE USERS;
+SQL> CREATE TABLE departments
+2 (
+3  department_id NUMBER NOT NULL，
+4  department_name VARCHAR2(40)NOT NULL，
+5  CONSTRAINT DEPARTMENTS_PK PRIMARY KEY(department_id)
+6  NOLOGGING 
+7  PCTFREE 10 
+8  INITRANS 1 
+9  STORAGE 
+10 ( 
+11  INITIAL 65536 
+12  NEXT 1048576 
+13  MINEXTENTS 1 
+14  MAXEXTENTS UNLIMITED 
+15 )
+16 TABLESPACE USERS;
+2)管理EMPLOYEES
+--在EMPLOYEES表中，删除列PHOTO列
+SQL> ALTER TABLE employees DROP COLUMN photo;
+--为EMAIL列增加唯一约束
+SQL> ALTER TABLE employees
+2  ADD CONSTRAINT EMPLOYEES_UNI1 UNIQUE(email);
+--为DEPARTMENT_ID列增加外键约束(对应DEPARTMENTS表中的主键)
+SQL> ALTER TABLE employees
+2  ADD CONSTRAINT EMPLOYEES_FK1 FOREIGN KEY (department_id)
+3  REFERENCES departments(department_id);
+--为MANAGER_ID列增加外键约束(对应EMPLOYEES表中的主键)
+SQL> ALTER TABLE employees
+2  ADD CONSTRAINT EMPLOYEES_FK2 FOREIGN KEY (manager_id)
+3  REFERENCES employees(employee_id)ON DELETE SET NULL;
+--为SALARY列增加检查约束(值大于0)
+SQL> ALTER TABLE employees
+2  ADD CONSTRAINT EMPLOYEES_ CHK1 CHECK (salary>0)
+--为MANAGER_ID列增加检查约束(不等于当前的EMPLOYEE_ID值)
+SQL> ALTER TABLE employees
+2  ADD CONSTRAINT EMPLOYEES_CHK2 CHECK (employee_id<>manager_id)
+2. 创建分区表
+本任务参考教材【示例 8 7】完成操作。
+3. 创建索引
+本任务参考教材8.3.1完成操作。
+
+
+
+
+********************************************************************************************************
+第9章 表数据维护 训练任务
+********************************************************************************************************
+1. 表数据的增加、修改、删除
+1)创建EMPLOYEES表和DEPARTMENTS表(参见第8章的训练任务)
+2)对EMPLOYEES表和DEPARTMENTS表中数据进行增删改
+--在DEPARTMENTS表中插入1条记录
+SQL> INSERT INTO departments(department_id，department_name)
+2  VALUES(60，'IT部门');
+--在EMPLOYEES表中插入2条记录
+SQL> INSERT INTO employees(
+2  employee_id，name，email，phone_number，hire_date，
+3  salary，manager_id，department_id，photo)
+4  VALUES( 1，'张三'，'zs@qq.com'，'123456789'，
+5  to_date('2016-5-25'，'YYYY-MM-DD')，8000，null，60，null);
+SQL> INSERT INTO employees(
+2  employee_id，name，email，phone_number，hire_date，
+3  salary，manager_id，department_id，photo)
+4  VALUES( 2，'李四'，'ls@qq.com'，'123456789'，
+5  to_date('2017-3-20'，'YYYY-MM-DD')，4000，1，60，null);
+SQL>COMMIT;
+--使用INSERT INTO语句插入数据，SALARY填充默认值，PHOTO为空值
+SQL> INSERT INTO employees(
+2  employee_id，name，email，phone_number，hire_date，
+3  manager_id，department_id，photo)
+4  VALUES( 3，'高七'，'gq@qq.com'，'123456789'，
+5  to_date('2017-5-25'，'YYYY-MM-DD')，1，60，null);
+-- 创建EMPLOYEES1表，并复制EMPLOYEES数据到EMPLOYEES1中
+SQL> CREATE TABLE employees1 
+2   ( 
+3    employee_id NUMBER NOT NULL，
+4 name VARCHAR2(40)NOT NULL，
+5 email VARCHAR2(40)，
+6 phone_number VARCHAR2(40)，
+7 hire_date DATE NOT NULL，
+8 salary NUMBER(8，2)，
+9 manager_id NUMBER，
+10 department_id NUMBER，
+11   photo BLOB，
+12 CONSTRAINT "EMPLOYEES1_PK" PRIMARY KEY (employee_id)
+13  )
+14 TABLESPACE USERS;
+SQL>INSERT INTO employees1 SELECT * FROM employees;
+SQL>COMMIT;
+--更新员工编号为3的记录，SALARY增加1000
+SQL> UPDATE employees SET salary=salary+1000 WHERE employee_id=3;
+--删除员工编号为3的记录
+SQL>DELETE FROM employees WHERE employee_id=3;
+2. 熟悉事务的ACID特性
+本任务参考教材9.5.4完成操作。
+3. 熟悉事务锁
+本任务参考教材9.5.5完成操作。
+
+
+
+********************************************************************************************************
+第10章 SQL语言基础 训练任务
+********************************************************************************************************
+1. 熟悉分页查询
+SELECT * FROM employees 
+OFFSET 10*(1-1)+1 ROWS FETCH NEXT 10 ROWS ONLY;
+
+SELECT * FROM employees 
+OFFSET 10*(2-1)+1 ROWS FETCH NEXT 10 ROWS ONLY;
+
+SELECT * FROM employees 
+OFFSET 10*(3-1)+1 ROWS FETCH NEXT 10 ROWS ONLY;
+2. 熟悉递归查询
+本任务参考教材10.9完成操作。
+
+
+
+********************************************************************************************************
+第11章 使用函数 训练任务
+********************************************************************************************************
+1. 使用单行函数
+（1）在employee表中查询出在(任何年份)2月受聘的所有员工
+
+SQL>SELECT * FROM employees WHERE TO_CHAR(hire_date，'mm')='02';
+
+（2）在employee表中查询满10年服务年限的员工的姓名和受雇日期
+
+SQL>SELECT first_name，last_name，hire_date
+FROM employees WHERE hire_date<=ADD_MONTHS(sysdate，-12*10);
+
+（3）在employee表中查询50号部门的雇员工作的月数
+
+SELECT employee_id，first_name，last_name，
+MONTHS_BETWEEN(sysdate，hire_date)
+FROM employees WHERE department_id=50;
+
+2. 略
+3. 略
+参照教材“11.3  SQL语句优化”。
+对比参数cost，filter，access，phiscal access，consistant get等参数值，分析执行效率。
+
+
+********************************************************************************************************
+第12章 PL/SQL语言 训练任务
+********************************************************************************************************
+1. 编写程序块
+DECLARE
+   num_sal EMPLOYEES.SALARY%TYPE;
+BEGIN
+   SELECT salary INTO num_sal FROM employees
+      WHERE employee_id=200;--查询employees表中职工号200的工资
+   IF(num_sal<3000) --判断工资是否小于3000
+   THEN
+      UPDATE employees  SET  salary=3000  --把小于3000的工资改为3000
+         WHERE employee_id=200;
+   END IF;
+   DBMS_OUTPUT.PUT_LINE('更新'||SQL%ROWCOUNT||'条记录'); 
+   DBMS_OUTPUT.PUT_LINE('工资是：'||num_sal);
+END;
+
+2. 创建游标
+set serveroutput on;
+DECLARE 
+   cur_id fruit.f_id%TYPE;
+   cur_name fruit.f_name%TYPE;
+   cur_price fruit.f_price%TYPE;
+   CURSOR frt_cur
+      IS SELECT f_id ，f_name，f_price FROM fruit WHERE f_price>10;
+BEGIN
+   OPEN frt_cur;
+   LOOP
+      FETCH frt_cur INTO cur_id，cur_name，cur_price;
+      IF frt_cur%FOUND THEN
+         INSERT INTO fruitage VALUES(cur_id，cur_name，cur_price);
+      ELSE 
+         dbms_output.put_line('已经取出所有数据，共有'
+         ||frt_cur%ROWCOUNT ||'条记录');
+         EXIT;
+      END IF;
+   END LOOP;
+   CLOSE frt_cur;
+END;
+
+
+3. 创建函数和过程
+1)创建函数
+CREATE OR REPLACE FUNCTION get_emp_name (v_no in NUMBER)
+RETURN VARCHAR2
+IS
+   v employees.first_name%type;
+BEGIN
+   select first_name into v from EMPLOYEES where EMPLOYEE_ID=v_no;
+   return v;
+END get_emp_name;
+/
+
+--调用：
+select get_emp_name(200)from dual;
+
+
+2)创建过程
+CREATE OR REPLACE PROCEDURE COUNT_SCH
+AS 
+   cur_count number(6);  
+   cur_sum number(6);
+BEGIN
+   SELECT COUNT(*)INTO cur_count FROM sch;
+   SELECT SUM(id)INTO cur_sum FROM sch;
+   IF SQL%FOUND THEN
+      DBMS_OUTPUT.PUT_LINE('记录总数：'||cur_count);
+      DBMS_OUTPUT.PUT_LINE('记录总数：'||cur_sum);
+   END IF;
+END;
+
+
+在Oracle SQL Developer中执行存储过程COUNT_SCH，语句如下：
+
+EXEC COUNT_SCH;
+
+4. 创建包和触发器
+1)创建包
+--创建程序包规范
+CREATE OR REPLACE PACKAGE pack_op 
+IS
+   PROCEDURE pro_print_ename(id number);
+   PROCEDURE pro_print_sal(id number);
+   FUNCTION fun_re_date(id number)return date;
+END pack_op;
+
+--创建程序包主体
+CREATE OR REPLACE PACKAGE body pack_op 
+IS
+   PROCEDURE pro_print_ename(id number)IS
+   name   employees.first_name%type;
+BEGIN
+   SELECT first_name INTO name FROM employees WHERE employee_id=id;
+   dbms_output.put_line('职员姓名：'||name);
+END pro_print_ename;
+
+PROCEDURE pro_print_sal(id number)IS
+   em_salary employees.salary%type;
+      BEGIN
+          SELECT salary INTO em_salary 
+          FROM employees WHERE employee_id=id;
+          dbms_output.put_line('职员工资：'||em_salary);
+END pro_print_sal;
+
+FUNCTION fun_re_date(id number)return date IS
+   bedate employees.hire_date%type;
+      BEGIN
+          SELECT hire_date into bedate 
+          from employees where employee_id=id;
+      RETURN bedate;
+END fun_re_date;
+END pack_op;
+
+--调用程序包中创建的过程和函数
+
+EXEC pack_op.pro_print_ename(200);
+
+Exec pack_op.pro_print_sal(200);
+
+SELECT pack_op.fun_re_date(200)FROM dual;
+
+
+2)触发器的创建和使用
+CREATE TRIGGER NUM_SUM
+AFTER INSERT
+ON persons
+BEGIN
+   IF INSERT THEN
+      INSERT INTO sales VALUES (NEW.name，7*NEW.num);
+   END IF;
+END;
+
+--测试语句
+向persons表中插入记录，代码如下：
+SQL>INSERT INTO persons VALUES ('xiaoxiao'，20);
+
+SQL>INSERT INTO persons VALUES ( 'xiaohua'，69);
+
+查询persons表中的记录，代码如下：
+SQL> SELECT * FROM persons;
+
+查询sales表中的记录，代码如下：
+
+SQL> SELECT *FROM sales;
+
+从执行的结果来看，在persons表插入记录之后，NUM_SUM触发器计算插入到persons表中的数据，
+并将结果插入到sales表中相应的位置。
+
+
+
+********************************************************************************************************
+第13章 备份与恢复 训练任务
+********************************************************************************************************
+1. 脱机备份和恢复
+首先查询所有数据文件，日志文件以及控制文件
+$ sqlplus / as sysdba
+SQL> SELECT NAME FROM v$datafile
+  2  UNION ALL
+  3  SELECT MEMBER AS NAME FROM v$logfile
+  4  UNION ALL
+  5  SELECT NAME FROM v$controlfile;
+参数文件spfileorcl.ora和初始化文件init.ora，initorcl.ora存储在目录$ORACLE_HOME/dbs中。编写的脚本如下：
+$ cat cold_cpfiles.sh
+#!/bin/bash
+if [ $# -lt 1 ]; then
+   echo "cold_cpfiles.sh -b -r"
+   echo "-b backup"
+   echo "-r restore"
+   return
+fi
+export ORACLE_HOME=/home/oracle/app/oracle/product/12.1.0/dbhome_1
+if [ $1 = "-b" ]; then
+echo "backup..."
+cp /home/oracle/app/oracle/oradata/orcl/system01.dbf /home/oracle/cold_bak_files/system01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/sysaux01.dbf /home/oracle/cold_bak_files/sysaux01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/undotbs01.dbf /home/oracle/cold_bak_files/undotbs01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/pdbseed/system01.dbf /home/oracle/cold_bak_files/pdbseed/system01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/users01.dbf /home/oracle/cold_bak_files/users01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/pdbseed/sysaux01.dbf /home/oracle/cold_bak_files/pdbseed/sysaux01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/pdborcl/system01.dbf /home/oracle/cold_bak_files/pdborcl/system01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/pdborcl/sysaux01.dbf /home/oracle/cold_bak_files/pdborcl/sysaux01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/pdborcl/SAMPLE_SCHEMA_users01.dbf /home/oracle/cold_bak_files/pdborcl/SAMPLE_SCHEMA_users01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/pdborcl/example01.dbf /home/oracle/cold_bak_files/pdborcl/example01.dbf
+cp /home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_1.dbf /home/oracle/cold_bak_files/pdborcl/pdbtest_users02_1.dbf
+cp /home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_2.dbf /home/oracle/cold_bak_files/pdborcl/pdbtest_users02_2.dbf
+cp /home/oracle/app/oracle/oradata/orcl/redo03.log /home/oracle/cold_bak_files/redo03.log
+cp /home/oracle/app/oracle/oradata/orcl/redo02.log /home/oracle/cold_bak_files/redo02.log
+cp /home/oracle/app/oracle/oradata/orcl/redo01.log /home/oracle/cold_bak_files/redo01.log
+cp /home/oracle/app/oracle/oradata/orcl/control01.ctl /home/oracle/cold_bak_files/control01.ctl
+cp /home/oracle/app/oracle/fast_recovery_area/orcl/control02.ctl /home/oracle/cold_bak_files/control02.ctl
+#备份初始化文件和参数文件
+cp $ORACLE_HOME/dbs/init.ora /home/oracle/cold_bak_files/init.ora
+cp $ORACLE_HOME/dbs/initorcl.ora /home/oracle/cold_bak_files/initorcl.ora
+cp $ORACLE_HOME/dbs/spfileorcl.ora /home/oracle/cold_bak_files/spfileorcl.ora
+elif [ $1 = "-r" ]; then
+   echo "restore..."
+cp /home/oracle/cold_bak_files/system01.dbf /home/oracle/app/oracle/oradata/orcl/system01.dbf
+cp /home/oracle/cold_bak_files/sysaux01.dbf /home/oracle/app/oracle/oradata/orcl/sysaux01.dbf
+cp /home/oracle/cold_bak_files/undotbs01.dbf /home/oracle/app/oracle/oradata/orcl/undotbs01.dbf
+cp /home/oracle/cold_bak_files/pdbseed/system01.dbf /home/oracle/app/oracle/oradata/orcl/pdbseed/system01.dbf
+cp /home/oracle/cold_bak_files/users01.dbf /home/oracle/app/oracle/oradata/orcl/users01.dbf
+cp /home/oracle/cold_bak_files/pdbseed/sysaux01.dbf /home/oracle/app/oracle/oradata/orcl/pdbseed/sysaux01.dbf
+cp /home/oracle/cold_bak_files/pdborcl/system01.dbf /home/oracle/app/oracle/oradata/orcl/pdborcl/system01.dbf
+cp /home/oracle/cold_bak_files/pdborcl/sysaux01.dbf /home/oracle/app/oracle/oradata/orcl/pdborcl/sysaux01.dbf
+cp /home/oracle/cold_bak_files/pdborcl/SAMPLE_SCHEMA_users01.dbf /home/oracle/app/oracle/oradata/orcl/pdborcl/SAMPLE_SCHEMA_users01.dbf
+cp /home/oracle/cold_bak_files/pdborcl/example01.dbf /home/oracle/app/oracle/oradata/orcl/pdborcl/example01.dbf
+cp /home/oracle/cold_bak_files/pdborcl/pdbtest_users02_1.dbf /home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_1.dbf
+cp /home/oracle/cold_bak_files/pdborcl/pdbtest_users02_2.dbf /home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_2.dbf
+cp /home/oracle/cold_bak_files/redo03.log /home/oracle/app/oracle/oradata/orcl/redo03.log
+cp /home/oracle/cold_bak_files/redo02.log /home/oracle/app/oracle/oradata/orcl/redo02.log
+cp /home/oracle/cold_bak_files/redo01.log /home/oracle/app/oracle/oradata/orcl/redo01.log
+cp /home/oracle/cold_bak_files/control01.ctl /home/oracle/app/oracle/oradata/orcl/control01.ctl
+cp /home/oracle/cold_bak_files/control02.ctl /home/oracle/app/oracle/fast_recovery_area/orcl/control02.ctl
+#恢复初始化文件和参数文件
+cp /home/oracle/cold_bak_files/init.ora $ORACLE_HOME/dbs/init.ora
+cp /home/oracle/cold_bak_files/initorcl.ora $ORACLE_HOME/dbs/initorcl.ora
+cp /home/oracle/cold_bak_files/spfileorcl.ora $ORACLE_HOME/dbs/spfileorcl.ora 
+else
+   echo "wrong parameter"
+fi
+该脚本有两个参数，一个是“-b”表示备份，另一个是“-r”表示恢复。最后根据脚本创建存储备份文件的一些目录：cold_bak_files、cold_bak_files/pdbseed和cold_bak_files/pdborcl。然后就可以运行脚本了。在运行脚本之前应该关闭数据库，运行脚本之后，应该打开数据库。
+2. 自动联机备份
+首先创建一个用存储备份文件和日志的目录：/home/oracle/rman_backup，然后新建两个shell文件：/home/oracle/rman_level0.sh和/home/oracle/rman_level1.sh。rman_level0.sh是0级备份的脚本文件，rman_level1.sh是一级备份的脚本文件。要保证这两个文件可执行。
+rman_level0.sh内容如下：
+#rman_level0.sh 
+#!/bin/sh
+export NLS_LANG='SIMPLIFIED CHINESE_CHINA.AL32UTF8'
+export ORACLE_HOME=/home/oracle/app/oracle/product/12.1.0/dbhome_1  
+export ORACLE_SID=orcl  
+export PATH=$ORACLE_HOME/bin：$PATH  
+
+rman target / nocatalog msglog=/home/oracle/rman_backup/lv0_`date +%Y%m%d-%H%M%S`_L0.log << EOF
+run{
+configure retention policy to redundancy 1;
+configure controlfile autobackup on;
+configure controlfile autobackup format for device type disk to '/home/oracle/rman_backup/%F';
+configure default device type to disk;
+crosscheck backup;
+crosscheck archivelog all;
+allocate channel c1 device type disk;
+backup as compressed backupset incremental level 0 database format '/home/oracle/rman_backup/dblv0_%d_%T_%U.bak'
+   plus archivelog format '/home/oracle/rman_backup/arclv0_%d_%T_%U.bak';
+report obsolete;
+delete noprompt obsolete;
+delete noprompt expired backup;
+delete noprompt expired archivelog all;
+release channel c1;
+}
+EOF
+
+exit
+rman_level1.sh内容如下：
+#rman_level1.sh 
+#!/bin/sh
+
+export NLS_LANG='SIMPLIFIED CHINESE_CHINA.AL32UTF8'
+export ORACLE_HOME=/home/oracle/app/oracle/product/12.1.0/dbhome_1 
+export ORACLE_SID=orcl 
+export PATH=$ORACLE_HOME/bin：$PATH  
+
+rman target / nocatalog msglog=/home/oracle/rman_backup/lv1_`date +%Y%m%d-%H%M%S`_L0.log << EOF
+run{
+configure retention policy to redundancy 1;
+configure controlfile autobackup on;
+configure controlfile autobackup format for device type disk to '/home/oracle/rman_backup/%F';
+configure default device type to disk;
+crosscheck backup;
+crosscheck archivelog all;
+allocate channel c1 device type disk;
+backup as compressed backupset incremental level 1 database format '/home/oracle/rman_backup/dblv1_%d_%T_%U.bak'
+   plus archivelog format '/home/oracle/rman_backup/arclv1_%d_%T_%U.bak';
+report obsolete;
+delete noprompt obsolete;
+delete noprompt expired backup;
+delete noprompt expired archivelog all;
+release channel c1;
+}
+EOF
+
+Exit
+上述两个shell文件中包含有rman的一些格式化参数%F，%d，%T，%U，目的是自定义备份文件的文件名称。
+下面通过linux的crontab命令创建自动执行脚本文件的调度：
+$crontab -e
+#每个星期天23：00执行rman_level0.sh
+00 23 * * 0 /home/oracle/rman_level0.sh >> 
+/home/oracle/rman_backup/rman_level0_`date +\%Y\%m\%d-\%H\%M\%S`.log 2>&1
+#星期一，二，三，四，五，六 23：00执行rman_level1.sh
+00 23 * * 1，2，3，4，5，6 /home/oracle/rman_level1.sh >> 
+/home/oracle/rman_backup/rman_level0_`date +\%Y\%m\%d-\%H\%M\%S`.log 2>&1
+所有工作做完之后，等待Linux系统自动执行脚本 ，然后每天定期检查目录中的自动生成的各类备份文件和日志文件，查看备份状态。比如：
+$ pwd
+/home/oracle/rman_backup
+$ ls
+arclv0_ORCL_20170502_4ps3896e_1_1.bak  dblv0_ORCL_20170502_4ns38948_1_1.bak  lv0_20170502-160802_L0.log
+c-1392946895-20170502-15               dblv0_ORCL_20170502_4os3895l_1_1.bak  lv1_20170502-160342_L0.log
+dblv0_ORCL_20170502_4ms38934_1_1.bak   lv0_20170502-155630_L0.log rman_level0_20170502-160802.log
+3. 数据迁移
+数据迁移的过程是先在源服务器上导出(使用命令expdp)一个pdb的数据，然后在目的服务上导入(使用impdp)数据。
+难点在于数据的导入。这是由于数据的存储方式多种多样，比如数据可能存储在多个表空间中，有些表还可能是分区存储的。因此在执行导入命令之前，必须了解源数据库的空间存储结构，要在目标数据库创建和源数据库相同数目的表空间，并且要在目标数据库上在创建一个可以访问这些表空间的用户，并设置足够的表空间配额(QUOTA)。
+典型在导出与导入命令是：
+$ expdp study/***@pdborcl directory=expdir dumpfile=study.dmp
+$ impdp study/***@pdborcl directory=expdir dumpfile=study.dmp
+

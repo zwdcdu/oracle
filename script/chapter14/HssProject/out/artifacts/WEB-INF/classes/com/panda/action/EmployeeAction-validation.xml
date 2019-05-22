@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE validators PUBLIC
+        "-//Apache Struts//XWork Validator 1.0.3//EN"
+        "http://struts.apache.org/dtds/xwork-validator-1.0.3.dtd">
+<validators>
+    <field name="employeesEntity.employeeId">
+        <field-validator type="required">
+            <message>员工编号不能为空</message>
+        </field-validator>
+    </field>
+
+    <field name="employeesEntity.name">
+        <field-validator type="requiredstring">
+            <message>员工姓名不能为空</message>
+        </field-validator>
+    </field>
+
+    <field name="hireDate">
+        <field-validator type="requiredstring">
+            <message>就职日期不能为空</message>
+        </field-validator>
+    </field>
+
+    <field name="employeesEntity.salary">
+        <field-validator type="required">
+            <message>员工工资不能为空</message>
+        </field-validator>
+        <field-validator type="long">
+            <param name="min">1</param>
+            <message>员工工资应该>= ${min}</message>
+        </field-validator>
+    </field>
+</validators>

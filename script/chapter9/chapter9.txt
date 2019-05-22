@@ -1,0 +1,384 @@
+﻿【示例9-1】使用标准格式插入记录。
+向hr用户的员工表employees插入2条记录。
+SQL>INSERT INTO employees(
+employee_id,first_name,last_name,email,phone_number,hire_date,
+job_id,salary,manager_id,department_id )
+VALUES( 400,'张三','李','zs@qq.com','123456789',
+TO_DATE('2016-5-25','YYYY-MM-DD'),'IT_PROG',6000,101,60);
+SQL>INSERT INTO employees(
+employee_id,first_name,last_name,email,phone_number,hire_date,
+job_id,salary,manager_id,department_id )
+VALUES( 401,'李四','李','ls@qq.com','123456789',
+TO_DATE('2016-7-25','YYYY-MM-DD'),'IT_PROG',5000,101,60);
+SQL>COMMIT;
+SQL>SELECT employee_id,first_name,salary,manager_id,department_id
+FROM employees WHERE employee_id>=400;
+
+【示例9-2】使用缺省列名插入记录。
+向hr用户的工作表jobs插入1条记录。
+SQL>INSERT INTO jobs VALUES('IT_MAN','IT Manager',8000,15000);
+SQL>COMMIT;
+SQL> SELECT * FROM jobs WHERE job_id='IT_MAN';
+
+【示例9-3】使用默认值插入记录。
+在hr用户的工作表jobs中,设置列min_salary的默认值为4000,并采用默认值插入1条记录。
+--设置列MIN_SALARY的默认值
+SQL>ALTER TABLE jobs MODIFY min_salary DEFAULT 4000; 
+--使用默认值插入记录
+SQL>INSERT INTO jobs(job_id,job_title,max_salary)
+VALUES('IT_PROG1','Programmer',12000);
+SQL>COMMIT;
+SQL> SELECT * FROM jobs WHERE job_id='IT_PROG1';
+
+【示例9-4】为列指定空值插入记录。
+在hr用户的工作表jobs中,插入一条记录,其中min_salary的值指定为NULL,max_salary未在插入列中给出。
+SQL>INSERT INTO jobs(job_id,job_title,min_salary)
+VALUES('IT_PROG2','Programmer',null);
+SQL>COMMIT;
+SQL>SELECT * FROM jobs WHERE job_id LIKE 'IT%';
+
+【示例9-5】从一个表向另一个表复制数据。
+在hr用户中新建一个工作表jobs1,其结构与jobs相同,并把jobs中job_id含有“IT”的记录,插入到jobs1中。
+SQL>CREATE TABLE hr.jobs(
+job_id VARCHAR2(10 BYTE),
+job_title VARCHAR2(35 BYTE)NOT NULL,
+min_salary NUMBER DEFAULT 4000,
+max_salary NUMBER,
+CONSTRAINT "job1_id_pk" PRIMARY KEY (job_id)
+);
+SQL>INSERT INTO jobs1 SELECT * FROM jobs WHERE job_id LIKE 'IT%'; 
+SQL>COMMIT;
+SQL>SELECT * FROM jobs1;
+
+【示例9-6】修改表数据
+修改hr用户中工作表jobs,为IT类工种的max_salary增加2000元。
+SQL> UPDATE jobs SET max_salary=max_salary+2000 
+WHERE job_id LIKE 'IT%';
+SQL>COMMIT;
+SQL>SELECT * FROM jobs WHERE job_id LIKE 'IT%';
+
+【示例9-7】删除记录。
+在hr用户工作表jobs中,删除一条记录。
+SQL>DELETE FROM jobs WHERE job_id='IT_PROG2';
+SQL>COMMIT;
+SQL>SELECT * FROM jobs WHERE job_id LIKE 'IT%';
+
+【示例9-8】合并数据行。
+使用MERGE语句,把hr用户工作表jobs中的IT工种的数据合并到工作表jobs1中,如果jobs1中有对应数据,就修改其max_salary的值;如果jobs1中没有对应数据,就插入新数据到jobs1中。
+SQL>SELECT * FROM jobs WHERE job_id LIKE 'IT%';
+SQL>SELECT *	FROM jobs1;
+SQL>MERGE INTO jobs1 j1 USING jobs j2 ON (j1.job_id=j2.job_id)
+WHEN MATCHED THEN 
+UPDATE SET j1.max_salary=j2.max_salary 
+WHERE j2.job_id LIKE 'IT%' 
+WHEN NOT MATCHED THEN 
+INSERT VALUES(j2.job_id,j2.job_title,j2.min_salary,
+j2.max_salary)WHERE j2.job_id LIKE 'IT%';
+SQL>COMMIT;
+SQL>SELECT * FROM jobs1;
+
+【示例9-9】事务的提交与回滚。
+操作hr用户中工作表jobs,插入记录过程中使用COMMIT和ROLLBACK。
+SQL>SELECT * FROM jobs WHERE job_id LIKE'IT%'; 
+SQL>INSERT INTO jobs VALUES('IT_TEST0','PROGRAMMER0',4000,10000);
+SQL>INSERT INTO jobs VALUES('IT_TEST1','PROGRAMMER1',4000,10000);
+SQL>INSERT INTO jobs VALUES('IT_TEST2','PROGRAMMER2',4000,10000);
+SQL>ROLLBACK; --回滚
+SQL>INSERT INTO jobs VALUES('IT_TEST3','PROGRAMMER3',4000,10000);
+SQL>INSERT INTO jobs VALUES('IT_TEST4','PROGRAMMER4',4000,10000);
+SQL>COMMIT; --提交
+SQL>SELECT * FROM jobs WHERE job_id LIKE 'IT%';
+
+【示例9-10】使用保存点。
+操作hr用户中工作表jobs,事务过程中使用SAVEPOINT。
+SQL>SELECT * FROM jobs WHERE job_id LIKE 'IT%';
+SQL> DELETE FROM jobs WHERE job_id='IT_TEST';
+SQL> SAVEPOINT Del_OK;
+SQL> UPDATE jobs SET min_salary=6000 WHERE job_id='IT_TEST3';
+SQL> ROLLBACK TO Del_OK;
+SQL> COMMIT;
+SQL> SELECT * FROM jobs WHERE job_id LIKE 'IT%';
+
+【示例9-11】事务的原子性操作。
+--在STUDY用户中做如下操作
+SQL> CREATE TABLE account(
+id number(4)CONSTRAINT pk_id PRIMARY KEY,
+name varchar2(30),
+balance number(10,2)
+); 
+Table ACCOUNT 已创建。
+SQL> INSERT INTO account VALUES(1001,'张三',10000);
+SQL> INSERT INTO account VALUES(1001,'李四',10000);
+SQL> SELECT * FROM account;
+SQL> BEGIN
+INSERT INTO account VALUES(1002,'李四',10000);
+INSERT INTO account VALUES(1002,'高七',10000);
+END;
+/
+SQL> SELECT * FROM account;
+SQL> INSERT INTO account VALUES(1003,'高七',10000);
+SQL> COMMIT;
+SQL> SELECT * FROM account;
+
+【示例9-12】事务的一致性操作。
+SQL> BEGIN
+UPDATE account SET balance=balance-500 WHERE id=1001;
+UPDATE account SET balance=balance+500 WHERE cid=1003;
+END;
+/
+SQL> SELECT * FROM account;
+SQL> BEGIN
+UPDATE account SET balance=balance-500 WHERE id=1001;
+UPDATE account SET balance=balance+500 WHERE id=1002;
+END;
+/
+SQL> COMMIT;
+SQL> SELECT * FROM account;
+
+【示例9-13】Oracle默认隔离级READ COMMITTED并发事务操作。
+打开sqlplus窗口1,执行如下操作：
+SQL> SELECT * FROM account; --原始数据
+SQL> INSERT INTO account VALUES(1002,'李四',10000);
+SQL> UPDATE account SET NAME='张山' WHERE ID=1001;
+SQL> SELECT * FROM account;
+
+打开sqlplus窗口2,查看account表中的数据：
+SQL> SELECT * FROM account;
+
+在窗口1中执行了COMMIT操作：
+SQL> COMMIT;
+
+再到窗口2中去查看account表中的数据,数据已更新：
+SQL> SELECT * FROM account;
+
+【示例9-14】隔离级READ ONLY和READ WRITE并发事务操作。
+打开3个sqlplus窗口,在窗口1中向account表中插入一行新数据：
+SQL> SELECT * FROM account; --查看原始数据
+SQL> INSERT INTO account VALUES(1004,'赵兵',12000);
+SQL> SELECT * FROM account; 
+
+在窗口2中设置事务的隔离属性是READ ONLY：
+SQL> SET TRANSACTION READ ONLY;
+
+在窗口3中设置事务的隔离属性是READ WRITE：
+SQL> SET TRANSACTION READ WRITE;
+
+窗口1提交前,观察窗口2和窗口3数据,都不能看到在窗口1中插入的新数据：
+SQL> SELECT * FROM account; --在窗口2中查看数据
+
+SQL> SELECT * FROM account; --在窗口3中查看数据
+
+在窗口1提交(COMMIT)后,观察窗口2和窗口3中的数据：
+SQL> SELECT * FROM account; --在窗口2中查看数据
+
+SQL> SELECT * FROM account; --在窗口3中查看数据
+
+在窗口2中向account表中插入数据(插入数据失败)：
+SQL>INSERT INTO account VALUES(1005,'杨雨',10000);
+
+在窗口3中向account表中插入数据(可以插入数据)：
+SQL>INSERT INTO account VALUES(1005,'杨雨',10000);
+SQL>SELECT * FROM account;
+
+【示例9-15】并发事务行级共享锁操作。
+打开3个Sql*Plus窗口,窗口1(hr用户操作),窗口2(hr用户操作),窗口3(system用户操作),首先在窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口1中对account表设置行级共享锁(RS)：
+SQL>LOCK TABLE account IN ROW SHARE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表设置行级共享锁(RS)：
+SQL>LOCK TABLE account IN ROW SHARE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表设置行级排他锁(RX)：
+SQL>COMMIT; --结束前面的事务,开启一个新的事务
+SQL>LOCK TABLE account IN ROW EXCLUSIVE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表设置共享锁(S)：
+SQL>COMMIT; --结束前面的事务,开启一个新的事务
+SQL>LOCK TABLE account IN SHARE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表设置共享行级排他锁(SRX)：
+SQL>COMMIT; --结束前面的事务,开启一个新的事务
+SQL>LOCK TABLE account IN SHARE ROW EXCLUSIVE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表设置排他锁(X)：
+SQL>COMMIT; --结束前面的事务,开启一个新的事务
+SQL>LOCK TABLE account IN EXCLUSIVE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口1中提交事务：
+SQL>COMMIT; 
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+当三个会话窗口中的事务都提交或回滚后,在窗口1中对account表重新设置行级共享锁(RS)：
+SQL>LOCK TABLE account IN ROW SHARE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中做如下操作：
+SQL> UPDATE account SET NAME='杨小雨' WHERE ID=1005;
+SQL> SELECT * FROM account;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+【示例9-16】并发事务行级排他锁操作。
+打开3个sqlplus窗口,窗口1(HR用户操作),窗口2(HR用户操作),窗口3(SYSTEM用户操作),首先在窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口1中对account表设置行级排他锁(RX)：
+SQL>LOCK TABLE account IN ROW EXCLUSIVE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表做如下操作：
+SQL>LOCK TABLE account IN ROW SHARE MODE;
+SQL>COMMIT; 
+SQL>LOCK TABLE account IN ROW EXCLUSIVE MODE;
+SQL>COMMIT; 
+SQL>LOCK TABLE account IN SHARE MODE;
+SQL>LOCK TABLE account IN SHARE ROW EXCLUSIVE MODE;
+SQL>LOCK TABLE account IN EXCLUSIVE MODE;
+
+当三个会话窗口中的事务都提交或回滚后,在窗口1中做如下操作：
+SQL>SELECT * FROM account WHERE id<1003 FOR UPDATE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+如果在窗口2中做以下修改：
+SQL> UPDATE account SET name='杨小雨' WHERE id=1005;
+SQL> SELECT * FROM account;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中继续做修改：
+SQL> UPDATE account SET name='李方方' WHERE id=1002;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+【示例9-17】并发事务共享锁操作。
+打开3个sqlplus窗口,窗口1(hr用户操作),窗口2(hr用户操作),窗口3(system用户操作),首先在窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口1中对account表设置共享锁(S)：
+SQL>LOCK TABLE account IN SHARE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表做如下操作：
+SQL>LOCK TABLE account IN ROW SHARE MODE;
+SQL>COMMIT; 
+SQL> LOCK TABLE account IN SHARE MODE;
+SQL>COMMIT; 
+SQL> LOCK TABLE account IN ROW EXCLUSIVE MODE;
+SQL>LOCK TABLE account IN SHARE ROW EXCLUSIVE MODE;
+SQL>LOCK TABLE account IN EXCLUSIVE MODE;
+
+在窗口1中重新对account表设置共享锁：
+SQL > LOCK TABLE account IN SHARE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表进行查询和修改：
+SQL>SELECT * FROM account; 
+SQL > UPDATE account SET NAME='杨小雨' WHERE ID='1005';
+
+在窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口1中提交事务(或回滚事务),将解除窗口1中事务的共享锁S：
+SQL>COMMIT;
+
+当窗口1中的共享锁被解除后,窗口2中的更新操作将继续进行：
+SQL> UPDATE account SET NAME='杨小雨' WHERE ID=1005;
+
+在窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+【示例9-18】并发事务共享行级排他锁操作。
+打开3个sqlplus窗口,窗口1(hr用户操作),窗口2(hr用户操作),窗口3(system用户操作),首先在窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口1中对account表设置共享行级排他锁(SRX)：
+SQL>LOCK TABLE account IN SHARE ROW EXCLUSIVE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表做如下操作：
+SQL>LOCK TABLE account IN ROW SHARE MODE;
+SQL>COMMIT; 
+SQL>LOCK TABLE account IN SHARE MODE;
+SQL>LOCK TABLE account IN ROW EXCLUSIVE MODE;
+SQL>LOCK TABLE account IN SHARE ROW EXCLUSIVE MODE;
+SQL>LOCK TABLE account IN EXCLUSIVE MODE;
+
+【示例9-19】并发事务排它锁操作。
+打开3个sqlplus窗口,窗口1(hr用户操作),窗口2(hr用户操作),窗口3(system用户操作),首先在窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口1中对account表设置排他锁(X)：
+SQL>LOCK TABLE account IN SHARE ROW EXCLUSIVE MODE;
+
+窗口3中查看锁信息：
+SQL>SELECT a.sid,a.serial#,a.username,b.lmode,b.block,b.type 
+FROM v$session a,v$lock b WHERE a.sid=b.sid AND USERNAME='HR';
+
+在窗口2中对account表做如下操作：
+SQL>LOCK TABLE account IN ROW SHARE MODE;
+SQL>LOCK TABLE account IN SHARE MODE;
+SQL>LOCK TABLE account IN ROW EXCLUSIVE MODE;
+SQL>LOCK TABLE account IN SHARE ROW EXCLUSIVE MODE;
+SQL>LOCK TABLE account IN EXCLUSIVE MODE;
+
+   

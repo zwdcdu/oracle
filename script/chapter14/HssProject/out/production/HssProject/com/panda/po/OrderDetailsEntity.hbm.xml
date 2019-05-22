@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+    <class name="com.panda.po.OrderDetailsEntity" table="ORDER_DETAILS" schema="STUDY">
+        <id name="id" column="ID"/>
+        <property name="orderId" column="ORDER_ID"/>
+        <property name="productId" column="PRODUCT_ID"/>
+        <property name="productNum" column="PRODUCT_NUM"/>
+        <property name="productPrice" column="PRODUCT_PRICE"/>
+        <many-to-one name="ordersByOrderId" class="com.panda.po.OrdersEntity"  insert="false" update="false">
+            <column name="ORDER_ID"/>
+        </many-to-one>
+        <many-to-one name="productsByProductId" class="com.panda.po.ProductsEntity"  insert="false" update="false">
+            <column name="PRODUCT_ID"/>
+        </many-to-one>
+    </class>
+</hibernate-mapping>

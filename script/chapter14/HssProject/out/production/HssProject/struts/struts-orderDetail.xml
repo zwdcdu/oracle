@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+
+    <package name="orderDetail" extends="struts-global" >
+        <!--删除订单详单-->
+      <action name="deleteAction" class="orderDetail" method="delete" >
+          <result type="redirectAction">showDetail</result>
+      </action>
+        <!--根据Id查询的Action-->
+      <action name="showDetail" class="orderDetail" method="toShow">
+          <result >/teacher/orderDetailList.jsp</result>
+      </action>
+        <!--编辑跳转的action-->
+      <action name="myAdd" class="orderDetail" method="toAdd">
+          <result name="success">/teacher/orderDetailAdd.jsp</result>
+      </action>
+
+        <!--跳转到添加的action-->
+      <action name="toEdit" class="orderDetail"   method="toEdit">
+          <result name="success">/teacher/OrderDetailEdit.jsp</result>
+      </action>
+
+        <!--增加详单的action-->
+        <action name="addDetails" class="detailOrder" method="add">
+            <result name="success" type="redirectAction">showDetail</result>
+            <result name="input">/teacher/orderDetailAdd.jsp</result>
+        </action>
+        <!--更新详单的action-->
+        <action name="editDetails" class="detailOrdeer" method="add">
+            <result name="success" type="redirectAction">showDetail</result>
+            <result name="input">/teacher/OrderDetailEdit.jsp</result>
+        </action>
+    </package>
+</struts>

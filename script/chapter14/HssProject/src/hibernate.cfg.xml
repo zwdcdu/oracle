@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <property name="connection.url">jdbc:oracle:thin:@//oracle-pc/pdborcl</property>
+        <property name="connection.driver_class">oracle.jdbc.OracleDriver</property>
+        <property name="hibernate.show_sql">false</property>
+        <property name="format_sql">false</property>
+
+        <mapping resource="com/panda/po/ProductsEntity.hbm.xml"/>
+        <mapping class="com.panda.po.DepartmentsEntity"/>
+        <mapping resource="com/panda/po/DepartmentsEntity.hbm.xml"/>
+        <mapping class="com.panda.po.EmployeesEntity"/>
+        <mapping resource="com/panda/po/EmployeesEntity.hbm.xml"/>
+        <mapping class="com.panda.po.OrdersEntity"/>
+        <mapping resource="com/panda/po/OrdersEntity.hbm.xml"/>
+        <mapping class="com.panda.po.OrderDetailsEntity"/>
+        <mapping resource="com/panda/po/OrderDetailsEntity.hbm.xml"/>
+        <mapping class="com.panda.po.OrderIdTempEntity"/>
+        <mapping resource="com/panda/po/OrderIdTempEntity.hbm.xml"/>
+        <mapping class="com.panda.po.ProductsEntity"/>
+        <mapping class="com.panda.po.ViewOrderDetailsEntity"/>
+        <mapping resource="com/panda/po/ViewOrderDetailsEntity.hbm.xml"/>
+    </session-factory>
+</hibernate-configuration>

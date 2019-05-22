@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+
+    <package name="employee" extends="struts-global" >
+        <!--添加员工的Action-->
+        <action name="employeeAction" class="actionEmployee" method="addEmployees">
+            <result name="success" type="redirectAction">employeeAction2</result>
+            <result name="input">/teacher/employeeAdd.jsp</result>
+        </action>
+
+        <!--分页展示员工信息的Action-->
+        <action name="employeeAction2" class="employees" >
+            <result name="success">/teacher/employeeList.jsp</result>
+        </action>
+
+        <!--点击详情后显示员工信息的Action-->
+        <action name="employeeAction3" class="employees" method="showEmployeeById" >
+            <result name="success">/teacher/employeeShow.jsp</result>
+        </action>
+
+        <!--点击编辑之后跳转到编辑员工信息页面的Action-->
+        <action name="employeeAction5" class="employees" method="editEmployeeById" >
+            <result name="success">/teacher/employeeEdit.jsp</result>
+        </action>
+
+        <!--编辑之后处理提交的表单的Action-->
+        <action name="employeeAction6" class="employees2" method="editEmployee" >
+            <result name="success" type="redirectAction">employeeAction2</result>
+            <result name="input">/teacher/employeeEdit.jsp</result>
+        </action>
+
+        <!--删除员工的Action-->
+        <action name="employeeAction7" class="employees" method="deleteEmployee">
+            <result name="success" type="redirectAction">employeeAction2</result>
+        </action>
+
+        <!--显示员工照片的Action-->
+        <action name="employeeAction4" class="employees" method="showImage" >
+        </action>
+    </package>
+</struts>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+    <!--切记需要写上scope=prototype(即是多例模式)-->
+    <!--操作删除和跳转编辑的action-->
+   <bean id="orderDetail" class="com.panda.action.OperateOrderDetailAction" scope="prototype"/>
+    <!--增加详单的Action-->
+    <bean id="detailOrder" class="com.panda.action.OrderDetailAddAction" scope="prototype"/>
+    <!--更新订单的Action-->
+    <bean id="detailOrdeer" class="com.panda.action.OrderDetailEditAction" scope="prototype"/>
+ </beans>

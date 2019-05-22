@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+	<constant name="struts.objectFactory" value="spring" />
+    <constant name="struts.devMode" value="true"/>
+    <constant name="struts.multipart.saveDir" value="/tmp"/>
+    <include file="struts/struts-login.xml"/>
+    <include file="struts/struts-employee.xml"/>
+    <include file="struts/struts-product.xml"/>
+    <include file="struts/struts-order.xml"/>
+    <include file="struts/struts-department.xml"/>
+    <include file="struts/struts-orderDetail.xml"/>
+    <package name="struts-global" extends="struts-default">
+        <!-- 在package中，定义标签要有先后顺序result-types
+        interceptors
+        default-interceptor-ref
+        default-action-ref
+        default-class-ref
+        global-results
+        global-exception-mappings
+        action*(就是所有的action放到最后)
+        -->
+        <global-results>
+            <result name="errHandler" type="chain">
+                <param name="actionName">errorProcessor</param>
+            </result>
+        </global-results>
+        <global-exception-mappings>
+            <exception-mapping result="errHandler" exception="Exception"></exception-mapping>
+        </global-exception-mappings>
+        <action name="errorProcessor" class="com.panda.error.ErrorProcessor">
+            <result name="error">error.jsp</result>
+        </action>
+    </package>
+</struts>

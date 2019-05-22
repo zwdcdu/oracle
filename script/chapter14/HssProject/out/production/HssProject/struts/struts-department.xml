@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+        "http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+
+    <package name="department" extends="struts-global" >
+        <!--显示所有部门-->
+      <action name="showAllDepart" class="depart" method="showAllList">
+          <result name="success">/teacher/departmentList.jsp</result>
+      </action>
+        <!--删除部门-->
+      <action name="deleteActionss" class="depart" method="delete">
+          <result type="redirectAction">showAllDepart</result>
+      </action>
+        <!--编辑跳转的action-->
+      <action name="toEditsss" class="depart"  method="toEdit">
+          <result name="success">/teacher/departmentOne.jsp</result>
+      </action>
+        <!--编辑部门的Action-->
+      <action name="editActionsss"  class="depart" method="editDepart" >
+          <result name="success" type="redirectAction">showAllDepart</result>
+          <result name="input">/teacher/departmentOne.jsp</result>
+      </action>
+        <!--新增部门的action-->
+      <action name="addAction" class="depart" method="addDepart" >
+          <result name="success" type="redirectAction">showAllDepart</result>
+          <result name="input">/teacher/departmentAdd.jsp</result>
+      </action>
+
+    </package>
+</struts>

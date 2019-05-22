@@ -1,0 +1,67 @@
+﻿【示例5-1】启动数据库并观察SGA分配
+$ sqlplus /  as sysdba
+SQL> startup
+SQL> show parameter sga_
+
+【示例5-2】设置In-Memory内存大小
+本例设置inmemory_size为150m，如果设置内存允许，可以设置得更大一些。参数inmemory_max_populate_servers控制In-Memory后台工作者进程Wnnn的个数，进程数越多，装载速度越快，但消耗的资源也更多。
+SQL> ALTER SYSTEM SET inmemory_max_populate_servers=2 SCOPE=SPFILE;
+SQL> ALTER SYSTEM SET inmemory_size=150m SCOPE=SPFILE;
+SQL> SHUTDOWN IMMEDIATE
+SQL> STARTUP
+SQL> show parameter inmem
+
+【示例5-3】设置表SALES为In-Memory列存储表
+本例设置表SH.SALES为In-Memory列存储表，并通过执行计划观察查询效率的提高。首先观察没有将SALES表设置为In-Memory时的执行计划，以SH用户登录，然后查询：
+SQL> SET AUTOTRACE ON
+SQL> SELECT * FROM sh.sales WHERE  amount_sold=23.43;
+SQL> ALTER TABLE sales INMEMORY;
+SQL> SELECT * FROM sh.sales WHERE  amount_sold=23.43;
+SQL> SELECT * FROM sh.sales WHERE  amount_sold=23.43;
+
+【示例5-4】查询进程
+通过V$PROCESS查询操作系统的进程ID(SPID)，线程ID(STID)，进程名称(PNAME)。注意，PNAME非空的是后台进程，PNAME为空的行是与用户相关的服务器进程。还要注意SPID可能有重复，表示一个进程中包含了多个线程(STID)。
+SQL> SELECT spid,stid,pname FROM v$process ORDER BY spid;
+
+【示例5-5】给STUDY用户授权，让该用户可以创建作业任务
+$ sqlplus system/***@pdborcl
+SQL>GRANT create job TO study;
+SQL>GRANT manage scheduler TO study;
+
+【示例5-6】创建作业
+STUDY用户创建作业JOB_CALC，指定作业每天凌晨1点钟运行一次存储过程MYPACK.CALC_ALL_TRADERECEIVABLE。每天一次的指定参数为“repeat_interval => 'FREQ=DAILY;'”，凌晨1点钟由start_date指定。创建之后，只有当参数enabled为true的时候才能开始作业并重复循环执行。
+$ sqlplus study/***@pdborcl
+SQL> 
+BEGIN
+    DBMS_SCHEDULER.CREATE_JOB (
+     job_name => '"STUDY"."JOB_CALC"',
+     job_type => 'STORED_PROCEDURE',
+     job_action => 'STUDY.MYPACK.CALC_ALL_TRADERECEIVABLE',
+     number_of_arguments => 0,
+     start_date => TO_DATE('2016-04-01 01：00','YYYY-MM-DD HH24：MI'),
+     repeat_interval => 'FREQ=DAILY;',
+      end_date => NULL,
+      enabled => TRUE,
+      auto_drop => FALSE,
+      comments => '');
+END;
+/
+
+【示例5-7】查询作业信息
+本例查询用户创建的作业，注意NEXT_RUN_DATE表示作业下次开始执行的时间。通过这个查询，可以监控作业的运行情况。
+SQL> COL job_name FORMAT a15
+SQL> COL start_date FORMAT a30
+SQL> COL next_run_date FORMAT a30
+SQL> SELECT job_name,to_char(START_DATE,'yyyy-mm-dd hh24：mi：ss')START_DATE,to_char(NEXT_RUN_DATE,'yyyy-mm-dd hh24：mi：ss')NEXT_RUN_DATE FROM user_scheduler_jobs;
+
+【示例5-8】删除作业
+SQL>
+BEGIN
+DBMS_SCHEDULER.DROP_JOB(job_name => '"STUDY"."JOB_CALC"',
+                                defer => false,
+                                force => false);
+END;
+/
+
+
+

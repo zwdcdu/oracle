@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+    <class name="com.panda.po.DepartmentsEntity" table="DEPARTMENTS" schema="STUDY">
+        <id name="departmentId" column="DEPARTMENT_ID"/>
+        <property name="departmentName" column="DEPARTMENT_NAME"/>
+        <set name="employeesByDepartmentId" inverse="true" lazy="false">
+            <key>
+                <column name="DEPARTMENT_ID" not-null="true"/>
+            </key>
+            <one-to-many not-found="ignore" class="com.panda.po.EmployeesEntity"/>
+        </set>
+    </class>
+</hibernate-mapping>

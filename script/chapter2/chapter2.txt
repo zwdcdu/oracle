@@ -1,0 +1,250 @@
+﻿【示例2-1】  增加Linux的交换空间
+本例中使用目录/opt/swap来作为新增交换空间的目录。
+#free -m
+Swap：        5119          0       5119
+#dd if=/dev/zero of=/opt/swap bs=1024 
+#mkswap /opt/swap
+#swapon /opt/swap
+#free -m
+Swap：        9119          0       9119
+
+
+【示例2-2】  创建用户oracle和用户组dba,oinstall 
+#groupadd dba
+#groupadd oinstall
+#useradd -g oinstall -G dba oracle
+#id oracle
+uid=503(oracle)gid=503(oinstall)组=503(oinstall),504(dba)
+#passwd oracle
+创建了oracle用户以及相关用户组后,需要设置oracle用户密码。创建过程产生的用户号和组号不一定是503、504,要以实际产生的号为准。注意dba组号要在下面的sysctl.conf文件中使用。
+
+
+【示例2-3】  配置/etc/sysctl.conf文件
+# Controls the maximum shared segment size,in bytes
+kernel.shmmax = 68719476736
+# Controls the maximum number of shared memory segments,in pages
+kernel.shmall = 4294967296
+kernel.sem =250 32000 100 128
+kernel.shmmni = 4096
+net.core.wmem_default = 262144
+net.core.wmem_max = 1048576
+net.core.rmem_default = 262144
+net.core.rmem_max = 4194304
+fs.file-max=6815744
+fs.aio-max-nr=1048576
+ip_local_port_range=9000 65535
+#id oracle
+#uid=503(oracle)gid=503(oinstall)组=503(oinstall),504(dba)
+vm.hugetlb_shm_group = 504
+注意,参数修改完成后,运行下面的命令才能使修改生效：
+# sysctl –p
+
+# yum install compat-libcap1-1.10
+# yum install compat-libstdc++-33-3.2.3
+# yum install ksh
+# yum install libaio-devel-0.3.107
+# yum install gcc-c++
+
+
+【2.2 安装Oracle 12c】
+$ unzip linuxamd64_12102_database_1of2.zip
+$ unzip linuxamd64_12102_database_2of2.zip
+$ cd database
+$ ./runInstaller 
+
+
+【示例2-4】sqlplus测试连接
+本示例使用安装Oracle时候创建的oracle用户登录,在Linux命令行下运行sqlplus命令。
+$ sqlplus / as sysdba
+SQL> SELECT con_id,name FROM v$database;
+SQL> exit
+$
+
+
+【示例2-5】解锁HR用户
+$ sqlplus system/123@localhost:1521/pdborcl
+SQL> SELECT username,user_id,account_status FROM dba_users;
+SQL> ALTER USER hr ACCOUNT UNLOCK;
+SQL> SELECT username,user_id,account_status FROM dba_users WHERE  username='HR';
+SQL> exit
+$
+
+
+
+【示例2-6】给所有样例用户设定密码并解锁
+SQL> ALTER USER "HR" ACCOUNT UNLOCK ;
+SQL> ALTER USER "HR" IDENTIFIED BY 123 ;
+SQL> ALTER USER "SCOTT" ACCOUNT UNLOCK ;
+SQL> ALTER USER "SCOTT" IDENTIFIED BY 123 ;
+SQL> ALTER USER "SH" ACCOUNT UNLOCK ;
+SQL> ALTER USER "SH" IDENTIFIED BY 123 ;
+SQL> ALTER USER "BI" ACCOUNT UNLOCK ;
+SQL> ALTER USER "BI" IDENTIFIED BY 123 ;
+SQL> ALTER USER "OE" ACCOUNT UNLOCK ;
+SQL> ALTER USER "OE" IDENTIFIED BY 123 ;
+SQL> ALTER USER "IX" ACCOUNT UNLOCK ;
+SQL> ALTER USER "IX" IDENTIFIED BY 123 ;
+SQL> ALTER USER "PM" ACCOUNT UNLOCK ;
+SQL> ALTER USER "PM" IDENTIFIED BY 123 ;
+接下来,以HR用户登录,查询HR用户的regions表的信息。
+【示例2-7】用HR用户登录,查询样例数据
+$ sqlplus hr/123@localhost:1521/pdborcl
+SQL> SELECT table_name FROM user_tables;
+SQL> SELECT * FROM regions WHERE  region_id=1;
+
+【示例2-8】设置登录到CDB的企业管理器的端口号
+本示例为容器数据库CDB分配两个企业管理器端口号：https的5500和http的5502。其中的EXEC表示执行Oracle的存储过程。
+$ sqlplus / as sysdba
+SQL> EXEC DBMS_XDB_CONFIG.SETHTTPSPORT(5500);   
+SQL> EXEC DBMS_XDB_CONFIG.SETHTTPPORT(5502);
+SQL>
+
+
+【示例2-9】设置登录到PDB的企业管理器的端口号
+本示例为插接式数据库pdborcl分配两个企业管理器端口号：https的5501和http的5505,注意,通过命令“ALTER SESSION SET CONTAINER=pdborcl;”从CDB切换到数据库pdborcl。
+$ sqlplus / as sysdba
+SQL> ALTER SESSION SET CONTAINER=pdborcl;
+SQL> EXEC DBMS_XDB_CONFIG.SETHTTPSPORT(5500);   
+SQL> EXEC DBMS_XDB_CONFIG.SETHTTPPORT(5502);
+SQL>
+如果端口号是0,则表示取消这个端口的监听,网站就无法访问了,比如：
+SQL> EXEC DBMS_XDB_CONFIG.SETHTTPPORT(0);
+
+
+【示例2-10】查看已经分配的HTTPS端口号
+如果数据库的CDB中分配了两个企业管理器端口号：https的5500和http的5502,CDB包含的插接式数据库也有两个企业管理器端口号：https的5501和http的5505,那么可以通过以下命令查询出来。
+$ sqlplus / as sysdba
+SQL> SELECT dbms_xdb_config.gethttpsport FROM DUAL;
+SQL> SELECT dbms_xdb_config.gethttpport FROM DUAL;
+
+从CDB切换会话到pdborcl：
+SQL> ALTER SESSION SET CONTAINER =pdborcl;
+SQL> SELECT dbms_xdb_config.gethttpsport FROM DUAL;
+SQL> SELECT dbms_xdb_config.gethttpport FROM DUAL;
+也可以通过Oracle的操作系统命令“lsnrctl status”查看端口占用情况。
+
+【2.5  安装后的检测】
+下面是安装成功后/etc/profile文件的部分内容：
+export ORACLE_OWNER=oracle
+export ORACLE_HOME=/home/oracle/app/oracle/product/12.1.0/dbhome_1
+export ORACLE_SID=orcl
+export PATH=$ORACLE_HOME/bin:/usr/bin:$PATH
+export NLS_LANG='SIMPLIFIED CHINESE_CHINA.AL32UTF8'
+
+
+查看服务器端字符集的命令是：
+SQL> SELECT * FROM V$NLS_PARAMETERS;
+PARAMETER		  			VALUE						CON_ID
+-------------------------	-------------------------	----------
+NLS_LANGUAGE		 			SIMPLIFIED CHINESE			0
+NLS_TERRITORY				CHINA						0
+NLS_CURRENCY					￥							0
+NLS_ISO_CURRENCY				CHINA						0
+NLS_NUMERIC_CHARACTERS		.,							0
+NLS_CALENDAR					GREGORIAN					0
+NLS_DATE_FORMAT				DD-MON-RR					0
+NLS_DATE_LANGUAGE			SIMPLIFIED CHINESE			0
+NLS_CHARACTERSET				AL32UTF8					0
+NLS_SORT						BINARY						0
+NLS_TIME_FORMAT				HH.MI.SSXFF AM				0
+NLS_TIMESTAMP_FORMAT		DD-MON-RR HH.MI.SSXFF AM	0
+NLS_TIME_TZ_FORMAT			HH.MI.SSXFF AM TZR			0
+NLS_TIMESTAMP_TZ_FORMATTZR	DD-MON-RR HH.MI.SSXFF AM	0 
+NLS_DUAL_CURRENCY			￥							0
+NLS_NCHAR_CHARACTERSET		AL16UTF16					0
+NLS_COMP						BINARY						0
+NLS_LENGTH_SEMANTICS		BYTE						0
+NLS_NCHAR_CONV_EXCP			FALSE						0
+上述查询结果中,NLS_LANGUAGE、NLS_TERRITORY 和NLS_CHARACTERSET 这3行组合起来就是$NLS_LANG。
+
+
+
+【2.5.3 查看Oracle进程】
+Oracle在Linux中的进程名称是以“ora_”开头的,可以通过ps命令查看。
+$ ps -ef | grep ora_
+
+
+
+
+【2.5.4 查看监听器状态】
+Oracle安装成功后,除了启动Oracle进程之外,还会启动监听进程,监听进程的作用是提供外部应用访问Oracle服务的接口。查看监听器状态的命令是lsnrctl status。
+$ lsnrctl status
+
+
+
+【2.6  设置开机启动】
+设置开机启动数据库实例,如果有多个实例,文件/etc/oratab就应该有多行。该文件要被dbstart和dbshut命令调用,每一行的结尾有Y/N两个选项,Y表示dbstart和dbshut命令要启动或者停止该行实例,N则表示不影响该实例。以下操作需要以root身份进行。
+# vi /etc/oratab
+orcl：/home/oracle/app/oracle/product/12.1.0/dbhome_1：N
+orcl2：/home/oracle/app/oracle/product/12.1.0/dbhome_1：N
+改为：
+orcl：/home/oracle/app/oracle/product/12.1.0/dbhome_1：Y
+orcl2：/home/oracle/app/oracle/product/12.1.0/dbhome_1：Y
+
+# cd /etc/init.d
+# vi dbora
+/etc/init.d/dbora文件内容如下：
+#!/bin/bash
+# oracle：Start/Stop Oracle Database 11g R2/12c
+#
+# chkconfig：345 90 10
+# description：The Oracle Database Server is an RDBMS created by Oracle Corporation
+#
+# processname：oracle
+
+. /etc/rc.d/init.d/functions
+
+LOCKFILE=/var/lock/subsys/oracle
+ORACLE_HOME=/home/oracle/app/oracle/product/12.1.0/dbhome_1
+ORACLE_USER=oracle
+case "$1" in
+'start')
+   if [ -f $LOCKFILE ]; then
+      echo $0 already running.
+      exit 1
+   fi
+   echo -n $"Starting Oracle Database："
+   su - $ORACLE_USER -c "$ORACLE_HOME/bin/lsnrctl start"
+   su - $ORACLE_USER -c "$ORACLE_HOME/bin/dbstart $ORACLE_HOME"
+   touch $LOCKFILE
+   ;;
+'stop')
+   if [ ! -f $LOCKFILE ]; then
+      echo $0 already stopping.
+      exit 1
+   fi
+   echo -n $"Stopping Oracle Database："
+   su - $ORACLE_USER -c "$ORACLE_HOME/bin/lsnrctl stop"
+   su - $ORACLE_USER -c "$ORACLE_HOME/bin/dbshut $ORACLE_HOME"
+   rm -f $LOCKFILE
+   ;;
+'restart')
+   $0 stop
+   $0 start
+   ;;
+'status')
+   if [ -f $LOCKFILE ]; then
+      echo $0 started.
+      else
+      echo $0 stopped.
+   fi
+   ;;
+*)
+   echo "Usage：$0 [start|stop|status]"
+   exit 1
+esac
+exit 0
+
+最后设置开机自动启动：
+# chgrp dba dbora
+# chmod 750 dbora
+# ln -s /etc/init.d/dbora /etc/rc.d/rc0.d/K01dbora
+# ln -s /etc/init.d/dbora /etc/rc.d/rc3.d/S99dbora
+# ln -s /etc/init.d/dbora /etc/rc.d/rc5.d/S99dbora
+手工启动或者停止Oracle的命令是：
+service dbora [start / stop / restart / status],比如：
+# service dbora start
+# service dbora stop
+# service dbora restart
+# service dbora status
+

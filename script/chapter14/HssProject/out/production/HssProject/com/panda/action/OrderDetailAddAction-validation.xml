@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE validators PUBLIC
+        "-//Apache Struts//XWork Validator 1.0.3//EN"
+        "http://struts.apache.org/dtds/xwork-validator-1.0.3.dtd">
+        <validators>
+
+         <field name="orderDetailsEntity.id">
+          <field-validator type="required">
+              <message>详单Id不能为空</message>
+          </field-validator>
+         </field>
+
+         <field name="orderDetailsEntity.orderId">
+          <field-validator type="required">
+           <message>订单Id为空</message>
+          </field-validator>
+         </field>
+         
+         <field name="orderDetailsEntity.productId">
+          <field-validator type="required">
+           <message>商品Id不能为空</message>
+          </field-validator>
+         </field>
+
+         <field name="orderDetailsEntity.productNum">
+          <field-validator type="required">
+           <message>商品数量不能为空</message>
+          </field-validator>
+         </field>
+         
+         <field name="orderDetailsEntity.productPrice">
+          <field-validator type="required">
+           <message>商品价格不能为空</message>
+          </field-validator>
+         </field>
+
+        </validators>

@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-mapping PUBLIC
+    "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+    "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+
+    <class name="com.panda.po.EmployeesEntity" table="EMPLOYEES" schema="STUDY">
+        <id name="employeeId" column="EMPLOYEE_ID"/>
+        <property name="name" column="NAME"/>
+        <property name="email" column="EMAIL"/>
+        <property name="phoneNumber" column="PHONE_NUMBER"/>
+        <property name="hireDate" column="HIRE_DATE"/>
+        <property name="salary" column="SALARY"/>
+        <property name="managerId" column="MANAGER_ID"/>
+        <property name="departmentId" column="DEPARTMENT_ID"/>
+        <property name="photo" column="PHOTO"/>
+        <many-to-one name="employeesByManagerId" class="com.panda.po.EmployeesEntity"  insert="false" update="false">
+            <column name="MANAGER_ID" not-null="true"/>
+        </many-to-one>
+        <many-to-one name="departmentsByDepartmentId" class="com.panda.po.DepartmentsEntity"  insert="false" update="false" lazy="false">
+            <column name="DEPARTMENT_ID" not-null="true"/>
+        </many-to-one>
+        <set name="employeesByEmployeeId" inverse="true">
+            <key>
+                <column name="MANAGER_ID" not-null="true"/>
+            </key>
+            <one-to-many not-found="ignore" class="com.panda.po.EmployeesEntity"/>
+        </set>
+        <set name="ordersByEmployeeId" inverse="true">
+            <key>
+                <column name="EMPLOYEE_ID"/>
+            </key>
+            <one-to-many not-found="ignore" class="com.panda.po.OrdersEntity"/>
+        </set>
+    </class>
+</hibernate-mapping>

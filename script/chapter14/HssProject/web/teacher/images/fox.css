@@ -1,0 +1,120 @@
+BODY {
+	BACKGROUND-COLOR: #FFFFFF
+}
+.tmpstr {
+	WORD-BREAK: break-all
+}
+A:link {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: blink
+}
+A:visited {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: none
+}
+A:hover {
+	FONT-SIZE: 9pt; COLOR: #FF6600; BACKGROUND-COLOR: #FFFF00;TEXT-DECORATION: underline
+}
+A.bb:link {
+	FONT-SIZE: 10pt; COLOR: #ffffff
+}
+A.bb:visited {
+	FONT-SIZE: 10pt; COLOR: #ffffff
+}
+A.bb:hover {
+	FONT-SIZE: 10pt; COLOR: #000000; POSITION: relative; TOP: 1px
+}
+A.s:link {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: blink
+}
+A.s:visited {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: none
+}
+A.s:hover {
+	FONT-SIZE: 9pt; COLOR: #FF6600; TEXT-DECORATION: none
+}
+A.right:link {
+	FONT-SIZE: 9pt; COLOR: #ffffff; TEXT-DECORATION: blink
+}
+A.right:visited {
+	FONT-SIZE: 9pt; COLOR: #ffffff; TEXT-DECORATION: none
+}
+A.right:hover {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: none
+}
+A.red:link {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: blink
+}
+A.red:visited {
+	FONT-SIZE: 9pt; COLOR: #FF6600; TEXT-DECORATION: none
+}
+A.red:hover {
+	FONT-SIZE: 9pt; COLOR: #FF6600; TEXT-DECORATION: none
+}
+A.red:active {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: none
+}
+A.bar:link {
+	FONT-SIZE: 13px; COLOR: #000000
+}
+A.bar:visited {
+	FONT-SIZE: 13px; COLOR: #000000
+}
+A.bar:hover {
+	FONT-SIZE: 13px; COLOR: #000000; TEXT-DECORATION: underline
+}
+A.a:link {
+	FONT-WEIGHT: bold; FONT-SIZE: 14px; COLOR: #333333
+}
+A.a:visited {
+	FONT-WEIGHT: bold; FONT-SIZE: 14px; COLOR: #333333
+}
+A.a:hover {
+	FONT-WEIGHT: bold; FONT-SIZE: 14px; COLOR: #FF6600; TEXT-DECORATION: underline
+}
+A.b:link {
+	FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #ffffff
+}
+A.b:visited {
+	FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #ffffff
+}
+A.b:hover {
+	FONT-WEIGHT: bold; FONT-SIZE: 12px; COLOR: #000000; TEXT-DECORATION: underline
+}
+A.a2:link {
+	FONT-SIZE: 14px; COLOR: #000000
+}
+A.a2:visited {
+	FONT-SIZE: 14px; COLOR: #000000
+}
+A.a2:hover {
+	FONT-SIZE: 14px; COLOR: #FF6600; TEXT-DECORATION: underline
+}
+A.nei:link {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: none
+}
+A.nei:visited {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: none
+}
+A.nei:hover {
+	FONT-SIZE: 9pt; COLOR: #FF6600; TEXT-DECORATION: underline
+}
+A.left:link {
+	FONT-SIZE: 9pt; COLOR: #366ab3; TEXT-DECORATION: none
+}
+A.left:visited {
+	FONT-SIZE: 9pt; COLOR: #366ab3; TEXT-DECORATION: none
+}
+A.left:hover {
+	FONT-SIZE: 9pt; COLOR: #333333; TEXT-DECORATION: none
+}
+BODY {
+	FONT-SIZE: 9pt; LINE-HEIGHT: 150%; FONT-FAMILY: "宋体"
+}
+BODY {
+	SCROLLBAR-FACE-COLOR: #efefef; SCROLLBAR-HIGHLIGHT-COLOR: #ffffff; SCROLLBAR-SHADOW-COLOR: #dee3e7; SCROLLBAR-3DLIGHT-COLOR: #d1d7dc; SCROLLBAR-ARROW-COLOR: #000000; SCROLLBAR-TRACK-COLOR: #ededed; SCROLLBAR-DARKSHADOW-COLOR: #cccccc
+}
+INPUT {
+	PADDING-RIGHT: 1px; PADDING-LEFT: 1px; FONT-SIZE: 9pt; PADDING-BOTTOM: 1px; PADDING-TOP: 1px; FONT-FAMILY: "宋体"
+}
+TD {
+	MARGIN-TOP: 0px; FONT-SIZE: 9pt; MARGIN-BOTTOM: 0px; LINE-HEIGHT: 150%
+}

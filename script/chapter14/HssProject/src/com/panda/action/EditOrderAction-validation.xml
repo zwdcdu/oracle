@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE validators PUBLIC
+        "-//Apache Struts//XWork Validator 1.0.3//EN"
+        "http://struts.apache.org/dtds/xwork-validator-1.0.3.dtd">
+        <validators>
+
+         <field name="orderOnes.customerName">
+          <field-validator type="required">
+              <message>客户名不能为空</message>
+          </field-validator>
+         </field>
+
+         <field name="orderOnes.customerTel">
+          <field-validator type="required">
+           <message>客户电话不能为空</message>
+          </field-validator>
+         </field>
+         
+         <field name="orderDate">
+          <field-validator type="required">
+           <message>下单日期不能为空</message>
+          </field-validator>
+         </field>
+
+      <field name="orderOnes.discount">
+       <field-validator type="required">
+       <message>金钱折扣不能为空</message>
+       </field-validator>
+      </field>
+        </validators>

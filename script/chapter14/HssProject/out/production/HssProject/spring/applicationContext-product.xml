@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd">
+    <!--切记需要写上scope=prototype(即是多例模式)-->
+    <bean id="products" class="com.panda.action.ProductListAction" scope="prototype"/>
+    <!--编辑商品信息的Action-->
+    <bean id="podduct1" class="com.panda.action.EditProductAction" scope="prototype"/>
+    <!--添加商品的Action-->
+    <bean id="product2" class="com.panda.action.ProductAddAction" scope="prototype"/>
+ </beans>
