@@ -25,7 +25,7 @@ oracle@202.115.82.8's password:
 ```
 密码也是123
 在Windows上登录需要ssh客户端，可以下载安装: 
-https://github.com/zwdbox/CSharp/raw/master/gitgfb_ttrar.rar
+https://github.com/zwdcdu/master/gitgfb_ttrar.rar
 
 ## 网址
 - Oracle Database 12c Release 2 下载地址:
