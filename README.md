@@ -3,6 +3,7 @@
 
 ## 内容说明
 
+- hello
 - PPT目录：各章节的PPT
 - script目录：各章节的SQL语句及源码
 - doc目录：参考文档
@@ -25,10 +26,10 @@ oracle@202.115.82.8's password:
 ```
 密码也是123
 在Windows上登录需要ssh客户端，可以下载安装: 
-https://github.com/zwdcdu/master/gitgfb_ttrar.rar
+https://github.com/zwdcdu/oracle/raw/master/gitgfb_ttrar.rar
 
 ## 网址
-- Oracle Database 12c Release 2 下载地址:
+- Oracle Database 下载地址:
 
     http://www.oracle.com/technetwork/database/enterprise-edition/downloads/index.html
 
