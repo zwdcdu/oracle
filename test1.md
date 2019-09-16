@@ -37,7 +37,7 @@ HAVING d.department_name in ('IT'，'Sales');
 - Oracle地址：202.115.82.8 用户名：hr ， 密码123， 数据库名称：pdborcl，端口号：1521
 
 
-## 实验注意事项，完成时间： 2019-10-17日前上交
+## 实验注意事项，完成时间： 2019-10-1日前上交
 - 请按时完成实验，过时扣分。
 - 查询语句及分析文档`必须提交`到：你的Oracle项目中的test1目录中。
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test1
