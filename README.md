@@ -38,3 +38,21 @@ https://github.com/zwdcdu/oracle/raw/master/gitgfb_ttrar.rar
     
 - Oracle 12.2安装示例schema
     https://www.linuxidc.com/Linux/2017-08/146337.htm
+    
+## 命令参考
+
+### create a new repository on the command line
+```shell
+echo "# abc" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git remote add origin git@github.com:zwdcdu/abc.git
+git push -u origin master
+```
+
+### push an existing repository from the command line
+```shell
+git remote add origin git@github.com:zwdcdu/abc.git
+git push -u origin master
+```
