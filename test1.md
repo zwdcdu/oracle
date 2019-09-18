@@ -10,13 +10,11 @@
 
 ## 教材中的查询语句
 
-|ID|AAA|Age|
-|----|----|-----|
-{111|333|33322
-
 查询1：
 
 ```SQL
+set autotrace on
+
 SELECT d.department_name,count(e.job_id)as "部门总人数",
 avg(e.salary)as "平均工资"
 from hr.departments d,hr.employees e
@@ -27,6 +25,8 @@ GROUP BY d.department_name;
 
 - 查询2：
 ```SQL
+set autotrace on
+
 SELECT d.department_name,count(e.job_id)as "部门总人数",
 avg(e.salary)as "平均工资"
 FROM hr.departments d,hr.employees e
