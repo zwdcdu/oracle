@@ -39,7 +39,7 @@ https://github.com/zwdcdu/oracle/raw/master/gitgfb_ttrar.rar
 - Oracle 12.2安装示例schema
     https://www.linuxidc.com/Linux/2017-08/146337.htm
     
-## 命令参考
+## Git命令参考
 
 ### create a new repository on the command line
 ```shell
