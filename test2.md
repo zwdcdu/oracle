@@ -106,7 +106,7 @@ SQL>SELECT a.tablespace_name "表空间名",Total/1024/1024 "大小MB",
 - sqldeveloper授权对象的操作界面：
 ![](./img/sqldevelop授权对象.png)
 
-## 实验注意事项，完成时间： 2019-10-10日前上交
+## 实验注意事项，完成时间： 2019-10-16日前上交
 - 请按时完成实验，过时扣分。
 - 查询语句及分析文档`必须提交`到：你的Oracle项目中的test2目录中。
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test2
