@@ -21,8 +21,8 @@ system密码:123，所有密码都为123
 ## SSH登录
 ```shell
 $ ssh student@202.115.82.8
-oracle@202.115.82.8's password:
-[oracle@deep02 ~]$
+student@202.115.82.8's password:
+[student@deep02 ~]$cat readme.txt
 
 ```
 密码是123321qweewq
