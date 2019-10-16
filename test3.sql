@@ -14,7 +14,7 @@ SQL>exit
 SQL>@test3.sql
 SQL>exit
 
-该脚本在你的账号下创建了两个分区表，Orders（一万行数据），OrderDetails（三万行数据）。
+该脚本在你的账号下创建了两个分区表，orders（一万行数据），order_details（三万行数据）。
 
 
 参考：
@@ -243,3 +243,14 @@ end;
 select count(*) from orders;
 select count(*) from order_details;
 
+--以system用户运行：
+set autotrace on
+
+select * from your_user.orders where order_date
+between to_date('2017-1-1','yyyy-mm-dd') and to_date('2018-6-1','yyyy-mm-dd');
+
+select a.ORDER_ID,a.CUSTOMER_NAME,
+b.product_name,b.product_num,b.product_price
+from your_user.orders a,your_user.order_details b where
+a.ORDER_ID=b.order_id and
+a.order_date between to_date('2017-1-1','yyyy-mm-dd') and to_date('2018-6-1','yyyy-mm-dd');
