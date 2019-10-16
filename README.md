@@ -14,18 +14,25 @@
 地址：202.115.82.8
 数据库：pdborcl
 system密码:123，所有密码都为123
+
+成绩网址：http://202.115.82.8:1522
+
 ```
 ## SSH登录
-
 ```shell
-$ ssh oracle@202.115.82.8
+$ ssh student@202.115.82.8
 oracle@202.115.82.8's password:
 [oracle@deep02 ~]$
 
 ```
-密码也是123
-在Windows上登录需要ssh客户端，可以下载安装: 
+密码是123321qweewq
+在Windows上登录需要ssh客户端，可以下载安装 : 
 https://github.com/zwdcdu/oracle/raw/master/gitgfb_ttrar.rar
+
+```sql
+sqlplus system/123@pdborcl
+sqlplus 你的用户名/123@pdborcl
+```
 
 ## 网址
 - Oracle Database 下载地址:
