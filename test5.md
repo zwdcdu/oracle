@@ -41,7 +41,6 @@ CONNECT BY PRIOR EMPLOYEE_ID = MANAGER_ID
 - 查询语句及分析文档`必须提交`到：你的Oracle项目中的test5目录中。
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test5
 - 实验分析及结果文档说明书用Markdown格式编写。
-- 实验最后要写到纸质实验报告中。
 
 ## 评分标准
 - 实验独立完成，有详细的分析文档，文档中写明自己的用户名。（总分20分）
