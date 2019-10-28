@@ -4,7 +4,7 @@ type t_number is varray (100) of integer not null; --数组
 i integer;
 j integer;
 spaces varchar2(30) :='   '; --三个空格，用于打印时分隔数字
-N integer := 9; -- 一共打印6行数字
+N integer := 9; -- 一共打印9行数字
 rowArray t_number := t_number();
 begin
 dbms_output.put_line('1'); --先打印第1行

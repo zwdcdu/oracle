@@ -118,6 +118,7 @@ SQL>SELECT a.tablespace_name "表空间名",Total/1024/1024 "大小MB",
 ## 实验参考
 - Oracle地址：202.115.82.8 用户名：system,hr,你的用户名 ， 密码123， 数据库名称：pdborcl，端口号：1521
 - ssh oracle@202.115.82.8
+- test3.sql
 
 - SQL-DEVELOPER修改用户的操作界面：
 ![](./img/sqldevelop修改用户.png)
