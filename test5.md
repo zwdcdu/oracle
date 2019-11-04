@@ -33,10 +33,9 @@ Oracle递归查询的语句格式是：
 SELECT LEVEL,EMPLOYEE_ID,NAME,MANAGER_ID FROM employees 
 START WITH EMPLOYEE_ID = V_EMPLOYEE_ID 
 CONNECT BY PRIOR EMPLOYEE_ID = MANAGER_ID
-
 ```
 
-## 实验注意事项，完成时间： 2018-11-30日前上交
+## 实验注意事项，完成时间： 2018-11-13日前上交
 - 请按时完成实验，过时扣分。
 - 查询语句及分析文档`必须提交`到：你的Oracle项目中的test5目录中。
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test5
@@ -48,5 +47,6 @@ CONNECT BY PRIOR EMPLOYEE_ID = MANAGER_ID
 - 测试语句正确（总分30分）
 
 ## 参见
-- 数据库服务器中的样例用户study，密码是123
+- 数据库服务器中的样例用户teacher，密码是123
+- [Oracle学习之start with...connect by子句的用法](https://www.cnblogs.com/sunfie/p/5129716.html)
 - 实验5.sql
