@@ -47,7 +47,8 @@ sqlplus 你的用户名/123@pdborcl
     https://www.linuxidc.com/Linux/2017-08/146337.htm
     
  - Oracle 12C DataGuard部署以及维护
-    https://blog.csdn.net/kiral07/article/details/86916367
+    - https://blog.csdn.net/kiral07/article/details/86916367
+    - [老师的虚拟机实战配置](./doc/Oracle12c%20DataGuard实际配置.md)
 ## Git命令参考
 
 ### create a new repository on the command line
