@@ -8,6 +8,7 @@
 ```
 mkdir -p /home/oracle/app/oracle/diag/orcl
 mkdir -p /home/oracle/app/oracle/oradata/stdorcl/
+mkdir -p /home/oracle/app/oracle/oradata/stdorcl/pdborcl
 mkdir -p /home/oracle/arch
 mkdir -p /home/oracle/rman
 mkdir -p /home/oracle/app/oracle/oradata/stdorcl/pdbseed/
@@ -23,7 +24,6 @@ drop database;
 启动到nomount
 ```
 $sqlplus / as sysdba
-shutdown immediate
 startup nomount
 ```
 
