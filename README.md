@@ -46,6 +46,8 @@ sqlplus 你的用户名/123@pdborcl
 - Oracle 12.2安装示例schema
     https://www.linuxidc.com/Linux/2017-08/146337.htm
     
+ - Oracle 12C DataGuard部署以及维护
+    https://blog.csdn.net/kiral07/article/details/86916367
 ## Git命令参考
 
 ### create a new repository on the command line

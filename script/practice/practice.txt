@@ -727,7 +727,10 @@ else
 fi
 该脚本有两个参数，一个是“-b”表示备份，另一个是“-r”表示恢复。最后根据脚本创建存储备份文件的一些目录：cold_bak_files、cold_bak_files/pdbseed和cold_bak_files/pdborcl。然后就可以运行脚本了。在运行脚本之前应该关闭数据库，运行脚本之后，应该打开数据库。
 2. 自动联机备份
-首先创建一个用存储备份文件和日志的目录：/home/oracle/rman_backup，然后新建两个shell文件：/home/oracle/rman_level0.sh和/home/oracle/rman_level1.sh。rman_level0.sh是0级备份的脚本文件，rman_level1.sh是一级备份的脚本文件。要保证这两个文件可执行。
+首先创建一个用存储备份文件和日志的目录：/home/oracle/rman_backup，
+然后新建两个shell文件：/home/oracle/rman_level0.sh和/home/oracle/rman_level1.sh。
+rman_level0.sh是0级备份的脚本文件，
+rman_level1.sh是一级备份的脚本文件。要保证这两个文件可执行。
 rman_level0.sh内容如下：
 #rman_level0.sh 
 #!/bin/sh
@@ -805,6 +808,6 @@ dblv0_ORCL_20170502_4ms38934_1_1.bak   lv0_20170502-155630_L0.log rman_level0_20
 数据迁移的过程是先在源服务器上导出(使用命令expdp)一个pdb的数据，然后在目的服务上导入(使用impdp)数据。
 难点在于数据的导入。这是由于数据的存储方式多种多样，比如数据可能存储在多个表空间中，有些表还可能是分区存储的。因此在执行导入命令之前，必须了解源数据库的空间存储结构，要在目标数据库创建和源数据库相同数目的表空间，并且要在目标数据库上在创建一个可以访问这些表空间的用户，并设置足够的表空间配额(QUOTA)。
 典型在导出与导入命令是：
-$ expdp study/***@pdborcl directory=expdir dumpfile=study.dmp
-$ impdp study/***@pdborcl directory=expdir dumpfile=study.dmp
+$ expdp study/123@pdborcl directory=expdir dumpfile=study.dmp
+$ impdp study/123@pdborcl directory=expdir dumpfile=study.dmp
 
