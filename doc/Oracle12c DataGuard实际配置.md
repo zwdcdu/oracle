@@ -1,7 +1,7 @@
 ## 以下内容是老师的样例虚拟机配置Oracle DataGuard的全过程
 - 参见：https://blog.csdn.net/kiral07/article/details/86916367
-- 主机(master)：db_unique_name=orcl
-- 备机(standby)：db_unique_name=stdorcl 
+- 主机(master)：db_unique_name=orcl IP地址：192.168.206.131
+- 备机(standby)：db_unique_name=stdorcl  IP地址：192.168.206.132
 -----------------------------------------------------------------
 第一步：备库
 -----------------------------------------------------------------
