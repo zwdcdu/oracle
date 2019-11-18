@@ -1,7 +1,14 @@
 ## 以下内容是老师的样例虚拟机配置Oracle DataGuard的全过程
 - 参见：https://blog.csdn.net/kiral07/article/details/86916367
-- 主机(master)：db_unique_name=orcl IP地址：192.168.206.131
-- 备机(standby)：db_unique_name=stdorcl  IP地址：192.168.206.132
+- 主机配置
+
+Type| Primary|Standby
+:----|:----|:-----
+IP地址 |192.168.206.131|192.168.206.132|
+db_name|orcl|orcl
+sid|orcl|orcl
+db_unique_name(Primary与Standby必须不同)|orcl|stdorcl|
+
 -----------------------------------------------------------------
 第一步：备库
 -----------------------------------------------------------------
@@ -84,7 +91,7 @@ stdorcl =
 ```
 在主库上生成备库的参数文件:
 ```
-$create pfile from spfile;
+SQL>create pfile from spfile;
 ```
 生成/home/oracle/app/oracle/product/12.1.0/dbhome_1/dbs/initorcl.ora
 
@@ -191,7 +198,7 @@ SID_LIST_LISTENER =
   (SID_LIST =
     (SID_DESC =
       (ORACLE_HOME = /home/oracle/app/oracle/product/12.1.0/db_1)
-      (SID_NAME = stdorcl)
+      (SID_NAME = orcl)
     )
   )
 ```
@@ -203,6 +210,14 @@ shutdown immediate
 startup
 alter database recover managed standby database disconnect;
 ```
+可以把语句alter database recover managed standby database disconnect;放到触发器中去：
+```
+$sqlplus / as sysdba
+shutdown immediate
+startup
+alter database recover managed standby database disconnect;
+```
+
 
 
 
@@ -210,3 +225,4 @@ alter database recover managed standby database disconnect;
 第四步：数据同步测试，主库+备库
 -----------------------------------------------------------------
 在主库修改数据，在备库查询修改。
+Select Name,Sequence#,applied,completion_time From v$archived_log Order By Sequence# Desc;
