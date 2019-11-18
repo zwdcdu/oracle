@@ -210,15 +210,7 @@ shutdown immediate
 startup
 alter database recover managed standby database disconnect;
 ```
-可以把语句alter database recover managed standby database disconnect;放到触发器中去：
-```
-$sqlplus / as sysdba
-shutdown immediate
-startup
-alter database recover managed standby database disconnect;
-```
-
-
+可以把语句alter database recover managed standby database disconnect;放到触发器中去，开机启动：
 
 
 -----------------------------------------------------------------
