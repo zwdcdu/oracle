@@ -58,13 +58,15 @@ alter system set remote_login_passwordfile='EXCLUSIVE' scope=spfile;
 alter system set PARALLEL_EXECUTION_MESSAGE_SIZE=8192 scope=spfile;
 ```
 
-编辑主库以及备库的tnsnames.ora文件
+编辑主库以及备库的/home/oracle/app/oracle/product/12.1.0/dbhome_1/network/admin/tnsnames.ora文件
 ```
 $gedit /home/oracle/app/oracle/product/12.1.0/dbhome_1/network/admin/tnsnames.ora
 
-orcl =
+ORCL =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = primary)(PORT = 1521))  
+    (ADDRESS_LIST =
+      (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.206.131)(PORT = 1521))
+    )
     (CONNECT_DATA =
       (SERVER = DEDICATED)
       (SERVICE_NAME = orcl)
@@ -73,10 +75,10 @@ orcl =
 
 stdorcl =
   (DESCRIPTION =
-    (ADDRESS = (PROTOCOL = TCP)(HOST = standby)(PORT = 1521))
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.206.132)(PORT = 1521))
     (CONNECT_DATA =
       (SERVER = DEDICATED)
-      (SID = stdorcl)
+      (SID = orcl)
     )
   )
 ```
