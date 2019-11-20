@@ -1,10 +1,10 @@
 <!-- markdownlint-disable MD033-->
 <!-- 禁止MD033类型的警告 https://www.npmjs.com/package/markdownlint -->
 
-## 全备份和全恢复实验<!-- markdownlint-disable MD033-->
+## Oracle 12c数据库全备份和全恢复实验<!-- markdownlint-disable MD033-->
 <!-- 禁止MD033类型的警告 https://www.npmjs.com/package/markdownlint -->
 
-本实现使用老师的虚拟机，通过rman_level0.sh和rman_level1.sh脚本对数据库进行全备份和全恢复，在数据库出现异常时候，不损失任何数据！
+本实验使用老师的虚拟机，通过rman_level0.sh和rman_level1.sh脚本对数据库进行全备份和全恢复，在数据库出现异常时候，不损失任何数据！
 
 ## 1. 开始全备份
 ```
