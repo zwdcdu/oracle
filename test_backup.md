@@ -4,7 +4,7 @@
 ## 全备份和全恢复实验<!-- markdownlint-disable MD033-->
 <!-- 禁止MD033类型的警告 https://www.npmjs.com/package/markdownlint -->
 
-本实现使用老师的虚拟机，通过rman_level0.sh和rman_level1.sh脚本对数据库进行全备份和全恢复，在数据库出现异常时候，不损失任何数据！。
+本实现使用老师的虚拟机，通过rman_level0.sh和rman_level1.sh脚本对数据库进行全备份和全恢复，在数据库出现异常时候，不损失任何数据！
 
 ## 1. 开始全备份
 ```
@@ -180,7 +180,7 @@ SQL> exit
 
 ## 4. 数据库完全恢复
 ### 4.1 重启损坏的数据库到mount状态
-- 通过shutdown immediate无法正常关闭数据库，只能通过shutdown abort强制关闭。然后将数据库启动到mount状态。
+通过shutdown immediate无法正常关闭数据库，只能通过shutdown abort强制关闭。然后将数据库启动到mount状态。
 ```
 [oracle@oracle-pc ~]$ sqlplus / as sysdba
 SQL> shutdown immediate
@@ -290,6 +290,8 @@ deleted backup piece
 backup piece handle=/home/oracle/rman_backup/c-1392946895-20191120-01 RECID=279 STAMP=1024821752
 Deleted 5 objects
 RMAN> exit
+[oracle@oracle-pc ~]$ cd rman_backup
+[oracle@oracle-pc rman_backup]$ ls
+lv0_20191120-083949_L0.log
 ```
-
-
+可见，删除备份集之后，备份文件也删除了。只留下了日志文件。
