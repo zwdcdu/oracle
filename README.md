@@ -6,6 +6,8 @@
 - script目录：各章节的SQL语句及源码
 - doc目录：参考文档
 - book.pdf： 本书的PDF文档
+- tools/gitgfb_ttar.rar -windows运行linux命令工具
+- student@202.115.82.8:~/downloads/sqldeveloper.zip :sqldeveloper工具
 
 ## 实验服务器地址
 
@@ -24,13 +26,14 @@ student@202.115.82.8's password:
 [student@deep02 ~]$cat readme.txt
 ```
 
-密码是123321qweewq
+密码是123
 在Windows上登录需要ssh客户端，可以下载安装 : 
 https://github.com/zwdcdu/oracle/raw/master/gitgfb_ttrar.rar
 
 ```sql
-sqlplus system/123@pdborcl
+[student@deep02 ~]$ sqlplus system/123@202.115.82.8/pdborcl
 sqlplus 你的用户名/123@pdborcl
+SQL> select * from hr.employees;
 ```
 
 ## 网址
@@ -93,4 +96,12 @@ git push -u origin master
 151.101.184.133    avatars7.githubusercontent.com
 151.101.184.133    avatars8.githubusercontent.com
 # GitHub End
+```
+
+## 添加student用户
+
+```shell
+useradd student -G  dba
+usermod -a -G oinstall student
+usermod -a -G dba student
 ```
