@@ -17,23 +17,37 @@
 system密码:123，所有密码都为123
 
 成绩网址：http://202.115.82.8:1522
+```
 
+## SSH环境下载
+在Windows上登录需要ssh客户端，可以下载安装Bit Bash:
+[https://github.com/zwdcdu/oracle/raw/master/tools/gitgfb_ttrar.rar]
 
-## SSH登录
+## SSH登录及连接Oracle测试
+
+linux中的用户student密码是123
+
 ```shell
 $ ssh student@202.115.82.8
 student@202.115.82.8's password:
 [student@deep02 ~]$cat readme.txt
 ```
 
-密码是123
-在Windows上登录需要ssh客户端，可以下载安装 : 
-https://github.com/zwdcdu/oracle/raw/master/gitgfb_ttrar.rar
+- 登录linux后连接Oracle，查询表hr.employees。
 
 ```sql
 [student@deep02 ~]$ sqlplus system/123@202.115.82.8/pdborcl
 sqlplus 你的用户名/123@pdborcl
 SQL> select * from hr.employees;
+```
+
+## 工具文件下载
+
+- 在Windows端运行git bash后，下载sqldeveloper和Oracle12c安装文件
+
+```shell
+scp student@202.115.82.8:~/tools/sqldeveloper.zip .
+scp student@202.115.82.8:~/tools/linuxx64_12201_database.zip .
 ```
 
 ## 网址
