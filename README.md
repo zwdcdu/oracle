@@ -6,8 +6,7 @@
 - script目录：各章节的SQL语句及源码
 - doc目录：参考文档
 - book.pdf： 本书的PDF文档
-- tools/gitgfb_ttar.rar -windows运行linux命令工具
-- student@202.115.82.8:~/downloads/sqldeveloper.zip :sqldeveloper工具
+- tools/gitgfb_ttar.rar -windows中运行git命令工具
 
 ## 实验服务器地址
 
@@ -19,7 +18,8 @@ system密码:123，所有密码都为123
 成绩网址：http://202.115.82.8:1522
 ```
 
-## SSH环境下载
+## git命令环境下载
+
 在Windows上登录需要ssh客户端，可以下载安装Bit Bash:
 [https://github.com/zwdcdu/oracle/raw/master/tools/gitgfb_ttrar.rar]
 
