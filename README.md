@@ -43,7 +43,7 @@ SQL> select * from hr.employees;
 
 ## 工具文件下载
 
-- 在Windows端运行git bash后，下载sqldeveloper和Oracle12c安装文件
+- 在Windows端运行git bash后，下载sqldeveloper和Oracle12c安装文件 
 
 ```shell
 scp student@202.115.82.8:~/tools/sqldeveloper.zip .
