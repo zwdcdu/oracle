@@ -20,7 +20,7 @@ system密码:123，所有密码都为123
 
 ## git命令环境下载
 
-在Windows上登录需要ssh客户端，可以下载安装Bit Bash:
+在Windows上登录需要ssh客户端，可以下载安装git Bash:
 [https://github.com/zwdcdu/oracle/raw/master/tools/gitgfb_ttrar.rar]
 
 ## SSH登录及连接Oracle测试
@@ -119,3 +119,53 @@ useradd student -G  dba
 usermod -a -G oinstall student
 usermod -a -G dba student
 ```
+
+run {
+shutdown immediate;
+startup mount;
+backup database format='/home/oracle/rman_bak/%d_%s.bak';
+alter database open;
+}
+
+run {
+shutdown immediate;
+startup mount;
+restore database;
+recover database;
+alter database open resetlogs;
+}
+
+SQL> select name from v$controlfile;
+/home/oracle/app/oracle/oradata/orcl/control01.ctl
+/home/oracle/app/oracle/oradata/orcl/control02.ctl
+
+SQL> select member from v$logfile;
+/home/oracle/app/oracle/oradata/orcl/redo03.log
+/home/oracle/app/oracle/oradata/orcl/redo02.log
+/home/oracle/app/oracle/oradata/orcl/redo01.log
+
+
+SQL> select file_name from dba_data_files;
+/home/oracle/app/oracle/oradata/orcl/system01.dbf
+/home/oracle/app/oracle/oradata/orcl/sysaux01.dbf
+/home/oracle/app/oracle/oradata/orcl/undotbs01.dbf
+/home/oracle/app/oracle/oradata/orcl/users01.dbf
+
+
+SQL> show parameter pfile
+/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/spfileorcl.ora
+
+
+右键菜单
+QWidget::customContextMenuRequested(QPoint)
+
+QTableView 插入QPushButton实现
+https://blog.csdn.net/LWLGZY/article/details/91384692
+
+for(int i = 0;i<list.count();i++)
+{
+     m_button = new QPushButton("发送控制");
+     connect(m_button,SIGNAL(clicked(bool)),this,SLOT(slot_sendCMD(bool)));
+     tableView->setIndexWidget(model->index(model->rowCount()-1,6),m_button);
+}
+
