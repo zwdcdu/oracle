@@ -49,9 +49,9 @@ SQL> select * from hr.employees;
 
 ## 工具文件下载
 
-- 在Windows端运行git bash后，下载sqldeveloper和Oracle12c安装文件 
+- 在Windows端运行git bash后，下载sqldeveloper和Oracle12c安装文件
 
-```shell
+```shellv
 scp student@202.115.82.8:~/tools/sqldeveloper.zip .
 scp student@202.115.82.8:~/tools/linuxx64_12201_database.zip .
 ```
@@ -157,21 +157,5 @@ SQL> select file_name from dba_data_files;
 /home/oracle/app/oracle/oradata/orcl/undotbs01.dbf
 /home/oracle/app/oracle/oradata/orcl/users01.dbf
 
-
 SQL> show parameter pfile
-/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/spfileorcl.ora
-
-
-右键菜单
-QWidget::customContextMenuRequested(QPoint)
-
-QTableView 插入QPushButton实现
-https://blog.csdn.net/LWLGZY/article/details/91384692
-
-for(int i = 0;i<list.count();i++)
-{
-     m_button = new QPushButton("发送控制");
-     connect(m_button,SIGNAL(clicked(bool)),this,SLOT(slot_sendCMD(bool)));
-     tableView->setIndexWidget(model->index(model->rowCount()-1,6),m_button);
-}
-
+/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/spfileorcl.orav
