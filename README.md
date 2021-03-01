@@ -41,6 +41,12 @@ sqlplus 你的用户名/123@pdborcl
 SQL> select * from hr.employees;
 ```
 
+- sys连接
+  - [student@deep02 ~]$ sqlplus sys/123@202.115.82.8/orcl as sysdba
+
+- hr用户连接
+  - [student@deep02 ~]$ sqlplus hr/123@202.115.82.8/pdborcl
+
 ## 工具文件下载
 
 - 在Windows端运行git bash后，下载sqldeveloper和Oracle12c安装文件 
