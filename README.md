@@ -125,8 +125,8 @@ git push -u origin master
 useradd student -G  dba
 usermod -a -G oinstall student
 usermod -a -G dba student
-```
 
+$rman target sys/123@202.115.82.8/orcl
 run {
 shutdown immediate;
 startup mount;
@@ -142,7 +142,6 @@ recover database;
 alter database open resetlogs;
 }
 
-```sql
 SQL> select name from v$controlfile;
 /home/oracle/app/oracle/oradata/orcl/control01.ctl
 /home/oracle/app/oracle/oradata/orcl/control02.ctl
