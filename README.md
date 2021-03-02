@@ -53,6 +53,7 @@ SQL> select * from hr.employees;
 
 ```shellv
 scp student@202.115.82.8:~/tools/sqldeveloper.zip .
+scp student@202.115.82.8:~/tools/sqldeveloper7.zip .
 scp student@202.115.82.8:~/tools/linuxx64_12201_database.zip .
 ```
 
@@ -151,7 +152,7 @@ SQL> select member from v$logfile;
 /home/oracle/app/oracle/oradata/orcl/redo02.log
 /home/oracle/app/oracle/oradata/orcl/redo01.log
 
-
+SQL> select file_name from v$datafile;
 SQL> select file_name from dba_data_files;
 /home/oracle/app/oracle/oradata/orcl/system01.dbf
 /home/oracle/app/oracle/oradata/orcl/sysaux01.dbf
