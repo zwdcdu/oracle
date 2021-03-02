@@ -141,6 +141,7 @@ recover database;
 alter database open resetlogs;
 }
 
+```sql
 SQL> select name from v$controlfile;
 /home/oracle/app/oracle/oradata/orcl/control01.ctl
 /home/oracle/app/oracle/oradata/orcl/control02.ctl
@@ -159,3 +160,4 @@ SQL> select file_name from dba_data_files;
 
 SQL> show parameter pfile
 /home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/spfileorcl.orav
+```
