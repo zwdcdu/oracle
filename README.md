@@ -193,3 +193,29 @@ ORCL =
 - sys用户
 - 菜单：工具->监视会话
 - 通过UI界面菜单，或者sql语句完成相应操作
+
+## 启用共享连接 
+
+- sys登录后执行
+
+```sql
+ALTER SYSTEM SET dispatchers="(PROTOCOL=TCP)(dispatchers=3)"
+ALTER SYSTEM SET max_dispatchers=5
+ALTER SYSTEM SET shared_servers = 1
+ALTER SYSTEM SET max_shared_servers=20
+ALTER SYSTEM SET shared_server_sessions=200
+show parameter shared_server
+```
+
+- hr用户
+
+```shell
+共享模式登录测试：
+sqlplus hr/123@localhost/pdborcl:shared
+ps -ef  | grep ora_d[0-9].*[_orcl$]
+
+专用模式登录测试：
+sqlplus hr/123@localhost/pdborcl
+ps -ef | grep oracleorcl
+
+```
