@@ -220,4 +220,7 @@ ps -ef  | grep ora_d[0-9].*[_orcl$]
 sqlplus hr/123@localhost/pdborcl
 ps -ef | grep oracleorcl
 
+查看监听状态：
+lsnrctl service
+lsnrctl status
 ```
