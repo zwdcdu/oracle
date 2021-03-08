@@ -197,6 +197,7 @@ ORCL =
 ## 启用共享连接 
 
 - sys登录后执行
+- sqlplus sys/123@localhost/orcl as sysdba
 
 ```sql
 ALTER SYSTEM SET dispatchers="(PROTOCOL=TCP)(dispatchers=3)"
