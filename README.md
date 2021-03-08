@@ -196,7 +196,7 @@ ORCL =
 
 ## 启用共享连接 
 
-- sys登录后执行
+- sys登录
 - sqlplus sys/123@localhost/orcl as sysdba
 
 ```sql
