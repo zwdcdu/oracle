@@ -166,7 +166,8 @@ SQL> show parameter pfile
 
 ## 在客户端配置TNS
 
-新建：D:\sqldeveloper\network\admin\tnsnames.ora,文件内容如下：
+- 新建Windows环境变量：TNS_ADMIN=D:\sqldeveloper\network\admin
+- 新建文件：D:\sqldeveloper\network\admin\tnsnames.ora,文件内容如下：
 
 ```text
 PDBORCL =
