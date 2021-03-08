@@ -163,3 +163,33 @@ SQL> select file_name from dba_data_files;
 SQL> show parameter pfile
 /home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/spfileorcl.orav
 ```
+
+## 在客户端配置TNS
+
+新建：D:\sqldeveloper\network\admin\tnsnames.ora,文件内容如下：
+
+```text
+PDBORCL =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 202.115.82.8)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = pdborcl)
+    )
+  )
+
+ORCL =
+  (DESCRIPTION =
+    (ADDRESS = (PROTOCOL = TCP)(HOST = 202.115.82.8)(PORT = 1521))
+    (CONNECT_DATA =
+      (SERVER = DEDICATED)
+      (SERVICE_NAME = orcl)
+    )
+  )
+```
+
+## 在sqldeveloper中查询oracle连接进程，终止部分进程
+
+- sys用户
+- 菜单：工具->监视会话
+- 通过UI界面菜单，或者sql语句完成相应操作
