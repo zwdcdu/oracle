@@ -69,7 +69,7 @@ HAVING d.department_name in ('IT','Sales');
 - 启动vscode，打开oracle目录
 - 创建一个test1目录，在test1目录中，至少创建一个文件：README.md，里面有你的作业文字，截图文件。
 - 作业完成后，推送到github网站（git add ,git commit,git push）
-- 推送时，如果出现错误OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to github.com，应添加Windows环境变量：GIT_SSL_NO_VERIFY=true
+- 推送时，如果出现错误OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to github.com，应添加Windows环境变量：GIT_SSL_NO_VERIFY=true。如果出现Time Out超时，等待一会儿，再次推送。
 - 作业目录样例
   
 ```text
