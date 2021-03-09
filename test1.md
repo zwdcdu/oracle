@@ -55,7 +55,7 @@ HAVING d.department_name in ('IT','Sales');
 ## 实验注意事项，完成时间： 2021-3-17日前上交
 
 - 请按时完成实验，过时扣分。
-- 查询语句及分析文档`必须提交`到：你的Oracle项目中的test1目录中。
+- 查询语句及分析文档`必须提交`到：你的oracle项目中的test1目录中。
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test1
 - 实验分析及结果文档说明书用Markdown格式编写。
 
