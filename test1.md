@@ -62,7 +62,15 @@ HAVING d.department_name in ('IT','Sales');
 ## 具体做法流程
 
 - 登录你的GitHub账号，创建一个公有资料库oracle，创建一个test1目录，在test1目录中，至少创建一个文件：README.md，里面有你的作业文字，截图文件。
-
+- 复制地址：https://github.com/youruser/oracle.git
+- 在本机运行克隆命令：
+- $git clone https://github.com/youruser/oracle.git
+- 自动在本地磁盘上生成oracle目录
+- 启动vscode，打开oracle目录
+- 创建一个test1目录，在test1目录中，至少创建一个文件：README.md，里面有你的作业文字，截图文件。
+- 作业完成后，推送到github网站（git add ,git commit,git push）
+- 样例
+  
 ```text
 oracle
    test1
