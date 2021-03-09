@@ -59,6 +59,10 @@ HAVING d.department_name in ('IT','Sales');
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test1
 - 实验分析及结果文档说明书用Markdown格式编写。
 
+## 具体做法流程
+
+- 登录你的GitHub账号，创建一个公有资料库oracle，创建一个test1目录，在test1目录中，至少创建一个文件：README.md，里面有你的作业文字，截图文件。
+
 ```text
 oracle
    test1
@@ -69,7 +73,8 @@ oracle
       README.md
       pict1.png
       pict2.png
-  ...  
+  ...
+  test5  
 ```
 
 ## 评分标准
