@@ -59,6 +59,19 @@ HAVING d.department_name in ('IT','Sales');
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test1
 - 实验分析及结果文档说明书用Markdown格式编写。
 
+```text
+oracle
+   test1
+      README.md
+      pict1.png
+      pict2.png
+   test2
+      README.md
+      pict1.png
+      pict2.png
+  ...  
+```
+
 ## 评分标准
 
 - 实验独立完成，有详细的分析文档。（总分20分）
