@@ -220,10 +220,23 @@ explain plan for SELECT * FROM hr.emp_test WHERE  employee_id=110;
 SELECT * FROM TABLE(dbms_xplan.display);
 --rows = 1，这是错误的基数
 
+------------------------------------------------------------------------------
+| Id  | Operation         | Name     | Rows  | Bytes | Cost (%CPU)| Time     |
+------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |          |     1 |    69 |     3   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| EMP_TEST |     1 |    69 |     3   (0)| 00:00:01 |
+------------------------------------------------------------------------------
+
 --统计后，让数据库感知表hr.emp_test记录数量的变化 
 EXEC DBMS_STATS.GATHER_TABLE_STATS('HR','EMP_TEST');
 explain plan for SELECT * FROM hr.emp_test WHERE  employee_id=110;
 SELECT * FROM TABLE(dbms_xplan.display);
 --rows = 4 这是正确的基数，有利于构建正确的计划
 
+------------------------------------------------------------------------------
+| Id  | Operation         | Name     | Rows  | Bytes | Cost (%CPU)| Time     |
+------------------------------------------------------------------------------
+|   0 | SELECT STATEMENT  |          |     4 |   276 |     6   (0)| 00:00:01 |
+|*  1 |  TABLE ACCESS FULL| EMP_TEST |     4 |   276 |     6   (0)| 00:00:01 |
+------------------------------------------------------------------------------
 ```
