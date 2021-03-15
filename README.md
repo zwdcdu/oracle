@@ -199,3 +199,29 @@ ps -ef | grep oracleorcl
 lsnrctl service
 lsnrctl status
 ```
+
+
+## 收集表的统计信息
+
+```sql
+drop table hr.emp_test;
+
+CREATE TABLE hr.emp_test as SELECT * FROM hr.employees;
+INSERT INTO hr.emp_test SELECT * FROM hr.employees;
+INSERT INTO hr.emp_test SELECT * FROM hr.employees;
+INSERT INTO hr.emp_test SELECT * FROM hr.employees;
+
+select count(*) from hr.emp_test;
+
+--统计前
+explain plan for SELECT * FROM hr.emp_test WHERE  employee_id=110;
+SELECT * FROM TABLE(dbms_xplan.display);
+--rows = 1，这是错误的基数
+
+--统计后，让数据库感知表hr.emp_test记录数量的变化 
+EXEC DBMS_STATS.GATHER_TABLE_STATS('HR','EMP_TEST');
+explain plan for SELECT * FROM hr.emp_test WHERE  employee_id=110;
+SELECT * FROM TABLE(dbms_xplan.display);
+--rows = 4 这是正确的基数，有利于构建正确的计划
+
+```
