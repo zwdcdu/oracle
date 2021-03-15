@@ -203,6 +203,8 @@ lsnrctl status
 
 ## 收集表的统计信息
 
+- system登录到pdborcl
+
 ```sql
 drop table hr.emp_test;
 
