@@ -7,6 +7,7 @@
 ## 实验内容
 
 Oracle有一个开发者角色resource，可以创建表、过程、触发器等对象，但是不能创建视图。本训练要求：
+
 - 在pdborcl插接式数据中创建一个新的本地角色con_res_view，该角色包含connect和resource角色，同时也包含CREATE VIEW权限，这样任何拥有con_res_view的用户就同时拥有这三种权限。
 - 创建角色之后，再创建用户new_user，给用户分配表空间，设置限额为50M，授予con_res_view角色。
 - 最后测试：用新用户new_user连接数据库、创建表，插入数据，创建视图，查询表和视图的数据。
@@ -111,7 +112,7 @@ SQL>SELECT a.tablespace_name "表空间名",Total/1024/1024 "大小MB",
 - sqldeveloper授权对象的操作界面：
 ![](./img/sqldevelop授权对象.png)
 
-## 实验注意事项，完成时间： 2021-10-16日前上交
+## 实验注意事项，完成时间： 2021-03-23日前上交
 
 - 请按时完成实验，过时扣分。
 - 查询语句及分析文档`必须提交`到：你的Oracle项目中的test2目录中。
