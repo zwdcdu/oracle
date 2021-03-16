@@ -205,7 +205,6 @@ lsnrctl status
 - system登录到pdborcl
 
 ```sql
-drop table hr.emp_test;
 
 CREATE TABLE hr.emp_test as SELECT * FROM hr.employees;
 INSERT INTO hr.emp_test SELECT * FROM hr.employees;
@@ -238,4 +237,8 @@ SELECT * FROM TABLE(dbms_xplan.display);
 |   0 | SELECT STATEMENT  |          |     4 |   276 |     6   (0)| 00:00:01 |
 |*  1 |  TABLE ACCESS FULL| EMP_TEST |     4 |   276 |     6   (0)| 00:00:01 |
 ------------------------------------------------------------------------------
+
+--实验完成后：
+drop table hr.emp_test;
+
 ```
