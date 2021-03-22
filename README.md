@@ -242,3 +242,43 @@ SELECT * FROM TABLE(dbms_xplan.display);
 drop table hr.emp_test;
 
 ```
+
+
+## 从pdborcl创建可插接数据库
+
+新数据库存入：/home/student/pdb/新数据库名称
+
+```sql
+$ sqlplus / as sysdba
+替代命令：
+$ sqlplus sys/123@202.115.82.8/orcl as sysdba
+
+查看创建前的数据库：
+show pdbs
+
+--关闭pdborcl
+ALTER PLUGGABLE DATABASE pdborcl CLOSE;
+--或者先切换到pdborcl：
+alter session set container=pdborcl
+shutdown immediate
+
+--切换数据库，回到CDB
+alter session set container=cdb$root
+
+--创建数据库clonedb
+CREATE PLUGGABLE DATABASE clonedb FROM pdborcl file_name_convert=('/home/oracle/app/oracle/oradata/orcl/pdborcl'，'/home/student/pdb/clonedb');
+
+--创建成功后，重新打开pdborcl为读写状态
+ALTER PLUGGABLE DATABASE pdborcl CLOSE;
+ALTER PLUGGABLE DATABASE pdborcl OPEN;
+--打开新数据库
+ALTER PLUGGABLE DATABASE clonedb OPEN;
+--查看新数据库
+show pdbs;
+
+--创建成功后,退出sys用户，以hr登录到新数据库,测试一下
+$ sqlplus hr/123@202.115.82.8/clonedb 
+
+--重新sys登录,删除新增的数据库
+DROP PLUGGABLE DATABASE clonedb INCLUDING DATAFILES;
+```
