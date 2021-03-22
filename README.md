@@ -285,3 +285,19 @@ $ sqlplus hr/123@202.115.82.8/clonedb
 --重新sys登录,删除新增的数据库
 DROP PLUGGABLE DATABASE clonedb INCLUDING DATAFILES;
 ```
+
+
+## 从pdborcl创建可插接数据库(简单流程，前提是父库pdborcl已在read only状态)
+
+```sql
+$ sqlplus sys/123@202.115.82.8/orcl as sysdba
+
+--创建数据库yourdb
+CREATE PLUGGABLE DATABASE yourdb FROM pdborcl file_name_convert=('/home/oracle/app/oracle/oradata/orcl/pdborcl'，'/home/student/pdb/yourdb');
+ALTER PLUGGABLE DATABASE yourdb OPEN;
+show pdbs;
+
+--创建成功后,退出sys用户，以hr登录到新数据库,测试一下
+$ sqlplus hr/123@202.115.82.8/yourdb 
+
+```
