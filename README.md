@@ -265,6 +265,9 @@ shutdown immediate
 --切换数据库，回到CDB
 alter session set container=cdb$root
 
+--只读方式打开pdborcl
+ALTER PLUGGABLE DATABASE pdborcl OPEN READ ONLY;
+
 --创建数据库clonedb
 CREATE PLUGGABLE DATABASE clonedb FROM pdborcl file_name_convert=('/home/oracle/app/oracle/oradata/orcl/pdborcl'，'/home/student/pdb/clonedb');
 
