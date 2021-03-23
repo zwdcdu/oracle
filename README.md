@@ -256,32 +256,36 @@ $ sqlplus sys/123@202.115.82.8/orcl as sysdba
 查看创建前的数据库：
 show pdbs
 
---关闭pdborcl
-ALTER PLUGGABLE DATABASE pdborcl CLOSE;
+--1.关闭pdborcl
+ALTER PLUGGABLE DATABASE pdborcl CLOSE immediate;
 --或者先切换到pdborcl：
 alter session set container=pdborcl
 shutdown immediate
-
 --切换数据库，回到CDB
 alter session set container=cdb$root
 
---只读方式打开pdborcl
+--2.只读方式打开pdborcl
 ALTER PLUGGABLE DATABASE pdborcl OPEN READ ONLY;
 
---创建数据库clonedb
+--3.创建数据库clonedb
 CREATE PLUGGABLE DATABASE clonedb FROM pdborcl file_name_convert=('/home/oracle/app/oracle/oradata/orcl/pdborcl'，'/home/student/pdb/clonedb');
 
---创建成功后，重新打开pdborcl为读写状态
-ALTER PLUGGABLE DATABASE pdborcl CLOSE;
-ALTER PLUGGABLE DATABASE pdborcl OPEN;
---打开新数据库
+--4.打开新数据库
 ALTER PLUGGABLE DATABASE clonedb OPEN;
 --查看新数据库
 show pdbs;
 
+--5.创建成功后，重新打开pdborcl为读写状态
+ALTER PLUGGABLE DATABASE pdborcl CLOSE immediate;
+ALTER PLUGGABLE DATABASE pdborcl OPEN;
+
+--6.测试
 --创建成功后,退出sys用户，以hr登录到新数据库,测试一下
 $ sqlplus hr/123@202.115.82.8/clonedb 
+--查看数据库相关文件
+$ ls /home/student/pdb/clonedb
 
+--7.删除新数据库（可选）
 --重新sys登录,删除新增的数据库
 DROP PLUGGABLE DATABASE clonedb INCLUDING DATAFILES;
 ```
@@ -292,12 +296,15 @@ DROP PLUGGABLE DATABASE clonedb INCLUDING DATAFILES;
 ```sql
 $ sqlplus sys/123@202.115.82.8/orcl as sysdba
 
---创建数据库yourdb
+--1.创建数据库yourdb
 CREATE PLUGGABLE DATABASE yourdb FROM pdborcl file_name_convert=('/home/oracle/app/oracle/oradata/orcl/pdborcl'，'/home/student/pdb/yourdb');
+--2.打开新数据库
 ALTER PLUGGABLE DATABASE yourdb OPEN;
 show pdbs;
-
+--3.测试
 --创建成功后,退出sys用户，以hr登录到新数据库,测试一下
 $ sqlplus hr/123@202.115.82.8/yourdb 
+--查看数据库相关文件
+$ ls /home/student/pdb/yourdb
 
 ```
