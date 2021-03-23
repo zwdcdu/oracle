@@ -311,6 +311,7 @@ $ ls /home/student/pdb/yourdb
 
 ## 简单流程2
 
+- 以yourdb为源数据库，yourdb已经打开为read only
 - 将zhang改为自己的数据库名称
 
 ```sql
