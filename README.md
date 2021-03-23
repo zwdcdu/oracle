@@ -297,7 +297,7 @@ DROP PLUGGABLE DATABASE clonedb INCLUDING DATAFILES;
 
 ```sql
 $ sqlplus sys/123@202.115.82.8/orcl as sysdba
-CREATE PLUGGABLE DATABASE zhang FROM yourdb file_name_convert=('/home/student/pdb/yourdb'，'/home/student/pdb/ zhang ');
+CREATE PLUGGABLE DATABASE zhang1 FROM yourdb file_name_convert=('/home/student/pdb/yourdb'，'/home/student/pdb/ zhang1 ');
 --4.打开新数据库
 ALTER PLUGGABLE DATABASE zhang OPEN;
 --查看新数据库
