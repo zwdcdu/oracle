@@ -308,3 +308,25 @@ $ sqlplus hr/123@202.115.82.8/yourdb
 $ ls /home/student/pdb/yourdb
 
 ```
+
+## 简单流程2
+
+- 将zhang改为自己的数据库名称
+
+```sql
+$ sqlplus sys/123@202.115.82.8/orcl as sysdba
+CREATE PLUGGABLE DATABASE zhang FROM yourdb file_name_convert=('/home/student/pdb/yourdb'，'/home/student/pdb/ zhang ');
+--4.打开新数据库
+ALTER PLUGGABLE DATABASE zhang OPEN;
+--查看新数据库
+show pdbs;
+--6.测试
+--创建成功后,退出sys用户，以hr登录到新数据库,测试一下
+$ sqlplus hr/123@202.115.82.8/ zhang 
+--查看数据库相关文件
+$ ls /home/student/pdb/ zhang
+--7 删除pdb
+ALTER PLUGGABLE DATABASE zhang close;
+Drop pluggable database zhang including datafiles;
+
+```
