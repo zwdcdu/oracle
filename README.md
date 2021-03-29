@@ -360,8 +360,24 @@ begin
     commit;
 end;
 
+--进行IN-Memory前后的查询对比
+
+--in-memory前：
+--两次执行:
+set autotrace on
+select sum(quantity*price) total from sales;
+
+--in-memory：
+set autotrace on
+alter table sales inmemory;
+
+--in-memory后：
+--两次执行:
+select sum(quantity*price) total from sales;
+
+观察consistent gets的数量，越少越快。
 
 --查询总金额
 
---进行IN-Memory前后的查询对比
+
 ```
