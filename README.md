@@ -333,3 +333,19 @@ select segment_name,segment_type,sum(bytes/1024/1024) from dba_segments
 where segment_type='TABLE'
 and segment_name = 'JOBS'
 group by segment_name, segment_type;
+
+## In_Memory
+
+```sql
+--创建表sales，插入100万条记录
+CREATE TABLE sales
+   (ID NUMBER primary key, 
+	NAME VARCHAR2(50 BYTE) not null, 
+	QUANTITY NUMBER(8,0), 
+	PRICE NUMBER(8,0)
+)
+
+--查询总金额
+
+--进行IN-Memory前后的查询对比
+```
