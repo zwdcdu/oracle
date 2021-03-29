@@ -312,3 +312,24 @@ ALTER PLUGGABLE DATABASE zhang close;
 Drop pluggable database zhang including datafiles;
 
 ```
+
+## 表空间命令
+
+--查看表空间大小：
+ select tablespace_name,sum(bytes)/1024/1024 from dba_data_files group by tablespace_name;
+
+--查看表空间已使用大小：
+
+ select tablespace_name,sum(bytes)/1024/1024 from dba_free_space group by tablespace_name;
+ 
+ --查看表空间所在的文件地址
+select * from dba_data_files
+
+--查看表空间下的表
+select table_name, tablespace_name,OWNER from dba_tables where tablespace_name = 'USERS';
+
+--查看表的大小
+select segment_name,segment_type,sum(bytes/1024/1024) from dba_segments
+where segment_type='TABLE'
+and segment_name = 'JOBS'
+group by segment_name, segment_type;
