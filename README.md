@@ -351,10 +351,10 @@ v1 number;
 v2 number;
 begin
     delete from sales;
-    v1:=dbms_random.value(1,90);
-    v2:=dbms_random.value(100,900);
     for i in 1..1000000
     loop
+        v1:=dbms_random.value(1,90);
+        v2:=dbms_random.value(100,900);
         insert into sales(id,name,quantity,price) values (i,'name'||i,v1,v2);
     end loop;
     commit;
