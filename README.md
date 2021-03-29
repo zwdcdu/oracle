@@ -360,6 +360,9 @@ begin
     commit;
 end;
 
+插入过程中，如果遇到超出表空间 'USERS' 的空间限额，可以执行：
+alter user 你的用户名 quota unlimited on users;
+
 --进行IN-Memory前后的查询对比
 
 --in-memory前：
