@@ -367,7 +367,7 @@ alter user 你的用户名 quota unlimited on users;
 
 --in-memory前：
 --两次执行:
-set autotrace on
+set autotrace on TRACEONLY 
 select sum(quantity*price) total from sales;
 
 --in-memory：

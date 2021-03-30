@@ -116,7 +116,7 @@ SQL>SELECT a.tablespace_name "表空间名",Total/1024/1024 "大小MB",
 - MAX_MB是指数据文件的最大容量。
 
 ## 实验参考
-- Oracle地址：202.115.82.8 用户名：system,hr,你的用户名 ， 密码123， 数据库名称：pdborcl，端口号：1521
+- Oracle地址：202.115.82.8 用户名：system,hr,你的用户名 ， 密码123， 数据库名称：pdborcl/或者你的数据库，端口号：1521
 - ssh oracle@202.115.82.8
 - test3.sql
 
@@ -126,7 +126,7 @@ SQL>SELECT a.tablespace_name "表空间名",Total/1024/1024 "大小MB",
 - sqldeveloper授权对象的操作界面：
 ![](./img/sqldevelop授权对象.png)
 
-## 实验注意事项，完成时间： 2019-10-23日前上交
+## 实验注意事项，完成时间： 2021-4-6日前上交
 - 请按时完成实验，过时扣分。
 - 查询语句及分析文档`必须提交`到：你的Oracle项目中的test3目录中。
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test3
