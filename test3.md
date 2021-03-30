@@ -1,10 +1,11 @@
 # 实验3：创建分区表
 
-## 实验目的：
+## 实验目的
 
 掌握分区表的创建方法，掌握各种分区方式的使用场景。
 
-## 实验内容：
+## 实验内容
+
 - 本实验使用3个表空间：USERS,USERS02,USERS03。在表空间中创建两张表：订单表(orders)与订单详表(order_details)。
 - 使用**你自己的账号创建本实验的表**，表创建在上述3个分区，自定义分区策略。
 - 你需要使用system用户给你自己的账号分配上述分区的使用权限。你需要使用system用户给你的用户分配可以查询执行计划的权限。
@@ -60,7 +61,8 @@ TABLESPACE USERS02
 );
 ```
 
-创建order_details表的部分语句如下：
+- 创建order_details表的部分语句如下：
+
 ```sql
 SQL> CREATE TABLE order_details 
 (
@@ -100,6 +102,7 @@ NOCOMPRESS NO INMEMORY
 以下样例查看表空间的数据库文件，以及每个文件的磁盘占用情况。
 
 $ sqlplus system/123@pdborcl
+
 ```sql
 SQL>SELECT tablespace_name,FILE_NAME,BYTES/1024/1024 MB,MAXBYTES/1024/1024 MAX_MB,autoextensible FROM dba_data_files  WHERE  tablespace_name='USERS';
 
@@ -112,10 +115,12 @@ SQL>SELECT a.tablespace_name "表空间名",Total/1024/1024 "大小MB",
         group  BY tablespace_name)b
  where  a.tablespace_name = b.tablespace_name;
 ```
+
 - autoextensible是显示表空间中的数据文件是否自动增加。
 - MAX_MB是指数据文件的最大容量。
 
 ## 实验参考
+
 - Oracle地址：202.115.82.8 用户名：system,hr,你的用户名 ， 密码123， 数据库名称：pdborcl/或者你的数据库，端口号：1521
 - ssh oracle@202.115.82.8
 - test3.sql
@@ -127,12 +132,14 @@ SQL>SELECT a.tablespace_name "表空间名",Total/1024/1024 "大小MB",
 ![](./img/sqldevelop授权对象.png)
 
 ## 实验注意事项，完成时间： 2021-4-6日前上交
+
 - 请按时完成实验，过时扣分。
 - 查询语句及分析文档`必须提交`到：你的Oracle项目中的test3目录中。
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test3
 - 实验分析及结果文档说明书用Markdown格式编写。
 
 ## 评分标准
+
 - 实验独立完成，有详细的分析文档，文档中写明自己的用户名。（总分20分）
 - 表创建正确（总分10分）
 - 分区策略设计正确（总分20分）

@@ -170,7 +170,7 @@ ORCL =
 - 菜单：工具->监视会话
 - 通过UI界面菜单，或者sql语句完成相应操作
 
-## 启用共享连接 
+## 启用共享连接
 
 - sys登录
 - sqlplus sys/123@localhost/orcl as sysdba
