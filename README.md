@@ -384,3 +384,12 @@ select sum(quantity*price) total from sales;
 
 
 ```
+
+## 无法启动的错误：ORA-01157: 无法标识/锁定数据文件 414 的解决办法
+
+```sql
+startup mount
+alter database datafile 414 offline drop;
+recover database;
+alter database open;
+```
