@@ -809,7 +809,7 @@ select * from orders where customer_name='zhang133000';
 select * from orders where order_date<to_date('2016-01-01','yyyy-mm-dd');
 
 --查看数据文件的使用情况
-select * from dba_datafiles;
+select * from dba_data_files;
 
 --查看表空间的使用情况
 SELECT a.tablespace_name "表空间名",
