@@ -41,7 +41,7 @@ Oracle递归查询的语句格式是：
     CONNECT BY PRIOR EMPLOYEE_ID = MANAGER_ID
     ```
 
-## 实验注意事项，完成时间： 2020-04-30日前上交
+## 实验注意事项，完成时间： 2021-04-30日前上交
 
 - 请按时完成实验，过时扣分。
 - 查询语句及分析文档`必须提交`到：你的Oracle项目中的test5目录中。
@@ -58,4 +58,4 @@ Oracle递归查询的语句格式是：
 
 - 数据库服务器中的样例用户teacher，密码是123
 - [Oracle学习之start with...connect by子句的用法](https://www.cnblogs.com/sunfie/p/5129716.html)
-- 实验5.sql
+- 实验5.sql./
