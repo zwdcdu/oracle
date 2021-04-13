@@ -30,7 +30,7 @@ GRANT "RESOURCE" TO STUDY WITH ADMIN OPTION;
 ALTER USER STUDY DEFAULT ROLE "CONNECT","RESOURCE";
 
 -- SYSTEM PRIVILEGES
-GRANT CREATE VIEW TO STUDY WITH ADMIN OPTION;
+GRANT CREATE VIEW TO zwd WITH ADMIN OPTION;
 
 
 参考：
@@ -94,6 +94,7 @@ begin
       end   if;
 end;
 /
+
 --------------------------------------------------------
 --  DDL for Table DEPARTMENTS
 --------------------------------------------------------
@@ -631,13 +632,10 @@ END;
 ALTER TRIGGER "ORDER_DETAILS_SNTNS_TRIG" DISABLE;
 
 --------------------------------------------------------
---  DDL for Sequence SEQ_ORDER_ID
+--  DDL for Sequence
 --------------------------------------------------------
-CREATE SEQUENCE  "SEQ_ORDER_ID"  MINVALUE 1 MAXVALUE 9999999999 INCREMENT BY 1 START WITH 1 CACHE 2000 ORDER  NOCYCLE  NOPARTITION ;
---------------------------------------------------------
---  DDL for Sequence SEQ_ORDER_DETAILS_ID
---------------------------------------------------------
-CREATE SEQUENCE  "SEQ_ORDER_DETAILS_ID"  MINVALUE 1 MAXVALUE 9999999999 INCREMENT BY 1 START WITH 1 CACHE 2000 ORDER  NOCYCLE  NOPARTITION ;
+CREATE SEQUENCE SEQ_ORDER_ID INCREMENT BY 1 START WITH 1 MAXVALUE 999999999 MINVALUE 1 CACHE 20 ORDER;
+CREATE SEQUENCE SEQ_ORDER_DETAILS_ID INCREMENT BY 1 START WITH 1 MAXVALUE 999999999 MINVALUE 1 CACHE 20 ORDER;
 
 --------------------------------------------------------
 --  DDL for View VIEW_ORDER_DETAILS
