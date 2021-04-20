@@ -17,8 +17,7 @@
 - 实验在自己的计算机上完成。
 - 文档`必须提交`到你的Oracle项目中的test6目录中。文档必须上传两套，因此你的test6目录中必须至少有两个文件：
   - 一个是Markdown格式的，文件名称是test6.md。
-  - 另一个是Word格式的，文件名称是test6_design.docx。参见[test6_design.docx](./test6_design.docx)
-  - 注意：test6_design.docx```必须在2021-06-01日打印出来上交给老师```。至少20页，1万字。    
+  - 另一个是Word格式的，文件名称是test6_design.docx。参见[test6_design.docx](./test6_design.docx)，文件不用打印。
 - 上交后，通过这个地址应该可以打开你的源码：https://github.com/你的用户名/oracle/tree/master/test6
 - 文档中所有设计和数据都必须是你自己独立完成的真实实验结果。不得抄袭，杜撰。
 
