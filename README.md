@@ -401,3 +401,20 @@ git push
 fatal: unable to access 'https://github.com/zwdcdu/oracle.git/': OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to github.com:443 
 ## git config --global http.sslVerify "false"
 ```
+
+## Oracle切换归档/非归档模式
+
+- sys login CDB:
+sqlplus / as sysdba
+
+- 查看归档/非归档模式:
+select name, log_mode from v$database;  或者 archive log list;
+
+- 开始切换，首先关闭数据库
+shutdown immediate;
+
+- 将数据库切换为非归档模式/归档模式
+alter database noarchivelog; 或者 alter database archivelog;
+
+- 打开数据库
+alter database open;
