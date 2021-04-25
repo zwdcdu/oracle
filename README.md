@@ -418,3 +418,148 @@ alter database noarchivelog; 或者 alter database archivelog;
 
 - 打开数据库
 alter database open;
+
+## 数据库导出expdp
+
+```text
+step1: system登录，创建目录，授权给自己用户
+[student@deep02 ~]$ sqlplus system/123@202.115.82.8/pdborcl
+SQL>create or replace directory expdir as '/home/student/pdborcl_expdir';
+目录已创建。
+SQL> grant read,write on directory expdir to zwd;
+授权成功。
+SQL>exit
+
+step2: 自己用户备份
+[student@deep02 pdborcl_expdir]$ expdp zwd/123@202.115.82.8/pdborcl directory=expdir dumpfile=zwd.dmp
+
+Export: Release 12.2.0.1.0 - Production on 星期日 4月 25 13:46:12 2021
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+连接到: Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+启动 "ZWD"."SYS_EXPORT_SCHEMA_01":  zwd/********@202.115.82.8/pdborcl directory=expdir dumpfile=zwd.dmp
+处理对象类型 SCHEMA_EXPORT/TABLE/TABLE_DATA
+处理对象类型 SCHEMA_EXPORT/TABLE/INDEX/STATISTICS/INDEX_STATISTICS
+处理对象类型 SCHEMA_EXPORT/TABLE/STATISTICS/TABLE_STATISTICS
+处理对象类型 SCHEMA_EXPORT/STATISTICS/MARKER
+处理对象类型 SCHEMA_EXPORT/PRE_SCHEMA/PROCACT_SCHEMA
+处理对象类型 SCHEMA_EXPORT/SEQUENCE/SEQUENCE
+处理对象类型 SCHEMA_EXPORT/TABLE/TABLE
+处理对象类型 SCHEMA_EXPORT/TABLE/COMMENT
+处理对象类型 SCHEMA_EXPORT/VIEW/VIEW
+处理对象类型 SCHEMA_EXPORT/TABLE/INDEX/INDEX
+处理对象类型 SCHEMA_EXPORT/TABLE/CONSTRAINT/CONSTRAINT
+处理对象类型 SCHEMA_EXPORT/TABLE/CONSTRAINT/REF_CONSTRAINT
+处理对象类型 SCHEMA_EXPORT/TABLE/TRIGGER
+. . 导出了 "ZWD"."ORDERS":"PARTITION_BEFORE_2016"      268.4 KB    5000 行
+. . 导出了 "ZWD"."ORDERS":"PARTITION_BEFORE_2017"      268.5 KB    5000 行
+. . 导出了 "ZWD"."EMPLOYEES"                           8.859 KB       7 行
+. . 导出了 "ZWD"."PRODUCTS"                            5.656 KB       9 行
+. . 导出了 "ZWD"."DEPARTMENTS"                         5.593 KB       3 行
+. . 导出了 "ZWD"."ORDERS":"PARTITION_BEFORE_2018"          0 KB       0 行
+. . 导出了 "ZWD"."ORDER_DETAILS":"PARTITION_BEFORE_2016"  425.7 KB   15000 行
+. . 导出了 "ZWD"."ORDER_DETAILS":"PARTITION_BEFORE_2017"  426.1 KB   15000 行
+. . 导出了 "ZWD"."ORDER_DETAILS":"PARTITION_BEFORE_2018"      0 KB       0 行
+已成功加载/卸载了主表 "ZWD"."SYS_EXPORT_SCHEMA_01"
+******************************************************************************
+ZWD.SYS_EXPORT_SCHEMA_01 的转储文件集为:
+  /home/student/pdborcl_expdir/zwd.dmp
+作业 "ZWD"."SYS_EXPORT_SCHEMA_01" 已于 星期日 4月 25 13:47:13 2021 elapsed 0 00:01:01 成功完成
+
+step3:查看备份结果
+[student@deep02 pdborcl_expdir]$ ls /home/student/pdborcl_expdir/
+export.log  zwd.dmp
+
+```
+
+## 数据库导入impdp
+
+```text
+step1: 删除表
+
+[student@deep02 ~]$ sqlplus zwd/123@pdborcl
+SQL*Plus: Release 12.2.0.1.0 Production on 星期日 4月 25 13:56:19 2021
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+上次成功登录时间: 星期日 4月  25 2021 13:54:45 +08:00
+连接到:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+SQL> drop table order_details;
+表已删除。
+SQL> drop table orders;
+表已删除。
+SQL> exit
+
+step2: 恢复数据
+[student@deep02 ~]$ impdp zwd/123@202.115.82.8/pdborcl directory=expdir dumpfile=zwd.dmp
+
+Import: Release 12.2.0.1.0 - Production on 星期日 4月 25 13:57:34 2021
+
+Copyright (c) 1982, 2017, Oracle and/or its affiliates.  All rights reserved.
+
+连接到: Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+已成功加载/卸载了主表 "ZWD"."SYS_IMPORT_FULL_01"
+启动 "ZWD"."SYS_IMPORT_FULL_01":  zwd/********@202.115.82.8/pdborcl directory=expdir dumpfile=zwd.dmp
+处理对象类型 SCHEMA_EXPORT/PRE_SCHEMA/PROCACT_SCHEMA
+处理对象类型 SCHEMA_EXPORT/SEQUENCE/SEQUENCE
+ORA-31684: 对象类型 SEQUENCE:"ZWD"."SEQ_ORDER_ID" 已存在
+
+ORA-31684: 对象类型 SEQUENCE:"ZWD"."SEQ_ORDER_DETAILS_ID" 已存在
+
+处理对象类型 SCHEMA_EXPORT/TABLE/TABLE
+ORA-39151: 表 "ZWD"."DEPARTMENTS" 已存在。由于跳过了 table_exists_action, 将跳过所有相关元数据和数据。
+
+ORA-39151: 表 "ZWD"."PRODUCTS" 已存在。由于跳过了 table_exists_action, 将跳过所有相关元数据和数据。
+
+ORA-39151: 表 "ZWD"."EMPLOYEES" 已存在。由于跳过了 table_exists_action, 将跳过所有相关元数据和数据。
+
+ORA-39151: 表 "ZWD"."ORDER_ID_TEMP" 已存在。由于跳过了 table_exists_action, 将跳过所有相关元数据和数据。
+
+处理对象类型 SCHEMA_EXPORT/TABLE/TABLE_DATA
+. . 导入了 "ZWD"."ORDERS":"PARTITION_BEFORE_2016"      268.4 KB    5000 行
+. . 导入了 "ZWD"."ORDERS":"PARTITION_BEFORE_2017"      268.5 KB    5000 行
+. . 导入了 "ZWD"."ORDERS":"PARTITION_BEFORE_2018"          0 KB       0 行
+. . 导入了 "ZWD"."ORDER_DETAILS":"PARTITION_BEFORE_2016"  425.7 KB   15000 行
+. . 导入了 "ZWD"."ORDER_DETAILS":"PARTITION_BEFORE_2017"  426.1 KB   15000 行
+. . 导入了 "ZWD"."ORDER_DETAILS":"PARTITION_BEFORE_2018"      0 KB       0 行
+处理对象类型 SCHEMA_EXPORT/TABLE/COMMENT
+处理对象类型 SCHEMA_EXPORT/VIEW/VIEW
+ORA-31684: 对象类型 VIEW:"ZWD"."VIEW_ORDER_DETAILS" 已存在
+
+处理对象类型 SCHEMA_EXPORT/TABLE/INDEX/INDEX
+处理对象类型 SCHEMA_EXPORT/TABLE/CONSTRAINT/CONSTRAINT
+处理对象类型 SCHEMA_EXPORT/TABLE/INDEX/STATISTICS/INDEX_STATISTICS
+处理对象类型 SCHEMA_EXPORT/TABLE/CONSTRAINT/REF_CONSTRAINT
+处理对象类型 SCHEMA_EXPORT/TABLE/TRIGGER
+处理对象类型 SCHEMA_EXPORT/TABLE/STATISTICS/TABLE_STATISTICS
+处理对象类型 SCHEMA_EXPORT/STATISTICS/MARKER
+作业 "ZWD"."SYS_IMPORT_FULL_01" 已经完成, 但是有 7 个错误 (于 星期日 4月 25 13:57:40 2021 elapsed 0 00:00:06 完成)
+
+step3:查看恢复结果
+
+[student@deep02 ~]$ sqlplus zwd/123@pdborcl
+
+SQL*Plus: Release 12.2.0.1.0 Production on 星期日 4月 25 13:58:26 2021
+
+Copyright (c) 1982, 2016, Oracle.  All rights reserved.
+
+上次成功登录时间: 星期日 4月  25 2021 13:57:34 +08:00
+
+连接到:
+Oracle Database 12c Enterprise Edition Release 12.2.0.1.0 - 64bit Production
+
+SQL> select count(*) from orders;
+
+  COUNT(*)
+----------
+     10000
+
+SQL> select count(*) from order_details;
+
+  COUNT(*)
+----------
+     30000
+
+SQL>
+
+```
