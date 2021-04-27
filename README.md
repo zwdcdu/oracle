@@ -668,7 +668,7 @@ RMAN> recover pluggable;
 RMAN> alter database open;
 ```
 
-## pdb完全恢复,从ly为例
+## 单库完全恢复/不完全恢复,从ly为例
 
 ```text
 - student登录linux,dedicated专用连接模式
@@ -727,7 +727,7 @@ SQL>shutdown immediate; 或者 shutdown abort;
 - 数据文件改名，模拟文件损失
 $mv -f /home/student/pdb_ly/pdbtest_users02_1.dbf  /home/student/pdb_ly/pdbtest_users02_1.dbf2
 
-- 选项1：pdb开始完全恢复
+- 选项1：单库完全恢复
 $rman target sys/123@202.115.82.8/orcl:dedicated
 RMAN> restore pluggable database ly;
 RMAN> recover pluggable database ly;
@@ -746,7 +746,7 @@ SQL> select * from mytable;
 可见，完全恢复成功，数据是最新的（即2021-04-27 08:03:01），无损失。
 
 
-## 选项2：pdb不完全恢复,恢复到update语句之前的状态，即恢复到2021-04-27 08:02:24时刻的数据
+## 选项2：单库不完全恢复,恢复到update语句之前的状态，即恢复到2021-04-27 08:02:24时刻的数据
 $rman target sys/123@202.115.82.8/orcl:dedicated
 RMAN> restore pluggable database ly;
 RMAN> recover pluggable database ly until time "to_date('2021-04-27 08:02:24','yyyy-mm-dd hh24:mi:ss')" AUXILIARY DESTINATION '/home/student/zwd';
