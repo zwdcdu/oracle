@@ -592,7 +592,7 @@ SELECT NAME FROM v$controlfile;
 
 - 必须以专用模式登录：
 $rman target sys/123@202.115.82.8/orcl:dedicated
-SQL>SELECT server FROM v$session WHERE  SID=(SELECT DISTINCT SID FROM v$mystat);
+
 
 ## 全库0级备份(只作一次)
 
@@ -644,7 +644,7 @@ release channel c3;
 
 ## 全库完全恢复
 
-- oracle登录linux,不是student用户
+- oracle登录linux,不是student用户,dedicated专用连接模式
 - 需要全库停机，需要oracle用户
 - sys登录到orcl，查看全库的数据文件
 
@@ -671,7 +671,7 @@ RMAN> alter database open;
 ## pdb完全恢复,从ly为例
 
 ```text
-- student登录linux
+- student登录linux,dedicated专用连接模式
 - 不需要全库停机，只需要待恢复pdb停机，不需要oracle用户
 - 前提是已经作了全库备份或者ly的单独备份
 - 假设ly数据库中有hr用户，hr用户中有表mytable
@@ -719,8 +719,9 @@ RMAN> alter pluggable database ly close;
 RMAN> exit;
 或者
 $sqlplus sys/123@202.115.82.8/orcl:dedicated as sysdba;
-$alter session set container=ly;
-$shutdown immediate; 或者 shutdown abort;
+SQL>SELECT server FROM v$session WHERE  SID=(SELECT DISTINCT SID FROM v$mystat);
+SQL>alter session set container=ly;
+SQL>shutdown immediate; 或者 shutdown abort;
 
 
 - 数据文件改名，模拟文件损失
@@ -743,7 +744,6 @@ SQL> select * from mytable;
          6 abc
 
 可见，完全恢复成功，数据是最新的（即2021-04-27 08:03:01），无损失。
-
 
 
 ## 选项2：pdb不完全恢复,恢复到update语句之前的状态，即恢复到2021-04-27 08:02:24时刻的数据
