@@ -647,6 +647,8 @@ release channel c3;
 - oracle登录linux,不是student用户
 - 需要全库停机，需要oracle用户
 - sys登录到orcl，查看全库的数据文件
+
+``` text
 $ sqlplus / as sysdba
 SQL> select file_name from dba_data_files;
 
@@ -664,6 +666,7 @@ RMAN> startup mount;
 RMAN> restore database;
 RMAN> recover pluggable;
 RMAN> alter database open;
+```
 
 ## pdb完全恢复,从ly为例
 
@@ -711,7 +714,6 @@ SQL> exit;
 
 - 关闭ly数据库
 
-```text
 $rman target sys/123@202.115.82.8/orcl:dedicated
 RMAN> alter pluggable database ly close;
 RMAN> exit;
@@ -719,7 +721,7 @@ RMAN> exit;
 $sqlplus sys/123@202.115.82.8/orcl:dedicated as sysdba;
 $alter session set container=ly;
 $shutdown immediate; 或者 shutdown abort;
-```
+
 
 - 数据文件改名，模拟文件损失
 $mv -f /home/student/pdb_ly/pdbtest_users02_1.dbf  /home/student/pdb_ly/pdbtest_users02_1.dbf2
