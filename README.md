@@ -596,6 +596,7 @@ SQL>SELECT server FROM v$session WHERE  SID=(SELECT DISTINCT SID FROM v$mystat);
 
 ## 全库0级备份(只作一次)
 
+```text
 run{
 configure retention policy to redundancy 1;
 configure controlfile autobackup on;
@@ -615,9 +616,11 @@ release channel c1;
 release channel c2;
 release channel c3;
 }
+```
 
 ## 全库1级增量备份
 
+```text
 run{
 configure retention policy to redundancy 1;
 configure controlfile autobackup on;
@@ -637,6 +640,7 @@ release channel c1;
 release channel c2;
 release channel c3;
 }
+```
 
 ## 全库完全恢复
 
