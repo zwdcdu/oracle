@@ -711,9 +711,15 @@ SQL> exit;
 
 - 关闭ly数据库
 
+```text
 $rman target sys/123@202.115.82.8/orcl:dedicated
 RMAN> alter pluggable database ly close;
 RMAN> exit;
+或者
+$sqlplus sys/123@202.115.82.8/orcl:dedicated as sysdba;
+$alter session set container=ly;
+$shutdown immediate; 或者 shutdown abort;
+```
 
 - 数据文件改名，模拟文件损失
 $mv -f /home/student/pdb_ly/pdbtest_users02_1.dbf  /home/student/pdb_ly/pdbtest_users02_1.dbf2
