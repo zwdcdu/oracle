@@ -569,7 +569,7 @@ SQL>
 - 查看全库所有需要备份的相关文件
 
 ```sql
-$sqlplus sys/123@202.115.82.8/ly as sysdba
+$sqlplus sys/123@202.115.82.8/orcl as sysdba
 SELECT NAME FROM v$datafile
 UNION ALL
 SELECT MEMBER AS NAME FROM v$logfile
@@ -588,7 +588,35 @@ UNION ALL
 SELECT NAME FROM v$controlfile;
 ```
 
-## 全库1级增量备份（每天作一次）
+## sys用户登录
+
+- 必须以专用模式登录：
+$rman target sys/123@202.115.82.8/orcl:dedicated
+SQL>SELECT server FROM v$session WHERE  SID=(SELECT DISTINCT SID FROM v$mystat);
+
+## 全库0级备份(只作一次)
+
+run{
+configure retention policy to redundancy 1;
+configure controlfile autobackup on;
+configure controlfile autobackup format for device type disk to '/home/student/rman_backup/%F';
+configure default device type to disk;
+crosscheck backup;
+crosscheck archivelog all;
+allocate channel c1 device type disk;
+allocate channel c2 device type disk;
+allocate channel c3 device type disk;
+backup incremental level 0 database format '/home/student/rman_backup/level0_%d_%T_%U.bak';
+report obsolete;
+delete noprompt obsolete;
+delete noprompt expired backup;
+delete noprompt expired archivelog all;
+release channel c1;
+release channel c2;
+release channel c3;
+}
+
+## 全库1级增量备份
 
 run{
 configure retention policy to redundancy 1;
