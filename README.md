@@ -563,3 +563,169 @@ SQL> select count(*) from order_details;
 SQL>
 
 ```
+
+## 备份与恢复
+
+- 查看全库所有需要备份的相关文件
+
+```sql
+$sqlplus sys/123@202.115.82.8/ly as sysdba
+SELECT NAME FROM v$datafile
+UNION ALL
+SELECT MEMBER AS NAME FROM v$logfile
+UNION ALL
+SELECT NAME FROM v$controlfile;
+```
+
+- 查看一个pdb数据库的数据文件,以ly为例
+
+```sql
+$sqlplus system/123@202.115.82.8/ly
+SELECT NAME FROM v$datafile
+UNION ALL
+SELECT MEMBER AS NAME FROM v$logfile
+UNION ALL
+SELECT NAME FROM v$controlfile;
+```
+
+## 全库1级增量备份（每天作一次）
+
+run{
+configure retention policy to redundancy 1;
+configure controlfile autobackup on;
+configure controlfile autobackup format for device type disk to '/home/student/rman_backup/%F';
+configure default device type to disk;
+crosscheck backup;
+crosscheck archivelog all;
+allocate channel c1 device type disk;
+allocate channel c2 device type disk;
+allocate channel c3 device type disk;
+backup incremental level 1 database format '/home/student/rman_backup/level1_%d_%T_%U.bak';
+report obsolete;
+delete noprompt obsolete;
+delete noprompt expired backup;
+delete noprompt expired archivelog all;
+release channel c1;
+release channel c2;
+release channel c3;
+}
+
+## 全库完全恢复
+
+- oracle登录linux,不是student用户
+- 需要全库停机，需要oracle用户
+- sys登录到orcl，查看全库的数据文件
+$ sqlplus / as sysdba
+SQL> select file_name from dba_data_files;
+
+- 全库停机
+$rman target /
+RMAN> shutdown immediate;  或者 shutdown abort;
+RMAN> exit
+
+- 数据文件改名，模拟文件损失
+$mv /home/student/pdb_ly/pdbtest_users02_1.dbf  /home/student/pdb_ly/pdbtest_users02_1.dbf2
+
+- 全库恢复
+$rman target /
+RMAN> startup mount;
+RMAN> restore database;
+RMAN> recover pluggable;
+RMAN> alter database open;
+
+## pdb完全恢复,从ly为例
+
+```text
+- student登录linux
+- 不需要全库停机，只需要待恢复pdb停机，不需要oracle用户
+- 前提是已经作了全库备份或者ly的单独备份
+- 假设ly数据库中有hr用户，hr用户中有表mytable
+
+- system登录到ly，查看ly的数据文件
+$ sqlplus system/123@202.115.82.8/ly
+SQL> select file_name from dba_data_files;
+/home/student/pdb/ ly /system01.dbf
+/home/student/pdb/ ly /sysaux01.dbf
+/home/student/pdb/ ly /undotbs01.dbf
+/home/student/pdb/ ly /users01.dbf
+/home/student/pdb/pdbtest_users02_1.dbf
+/home/student/pdb/pdbtest_users02_2.dbf
+/home/student/pdb_ly/pdbtest_users02_1.dbf
+/home/student/pdb_ly/pdbtest_users02_2.dbf
+SQL> select * from hr.mytable;
+        ID NAME
+---------- --------------------------------------------------
+         3 zhang
+         4 wang
+         5 abc
+SQL> select to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') as currentdate from dual;
+CURRENTDATE
+-------------------
+2021-04-27 08:02:24
+SQL> update hr.mytable set id=id+1;
+SQL> commit;
+SQL> select * from hr.mytable;
+        ID NAME
+---------- --------------------------------------------------
+         4 zhang
+         5 wang
+         6 abc
+SQL> select to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') as currentdate from dual;
+CURRENTDATE
+-------------------
+2021-04-27 08:03:01
+
+SQL> exit;
+
+- 关闭ly数据库
+
+$rman target sys/123@202.115.82.8/orcl:dedicated
+RMAN> alter pluggable database ly close;
+RMAN> exit;
+
+- 数据文件改名，模拟文件损失
+$mv -f /home/student/pdb_ly/pdbtest_users02_1.dbf  /home/student/pdb_ly/pdbtest_users02_1.dbf2
+
+- 选项1：pdb开始完全恢复
+$rman target sys/123@202.115.82.8/orcl:dedicated
+RMAN> restore pluggable database ly;
+RMAN> recover pluggable database ly;
+RMAN> alter pluggable database ly open;
+RMAN> exit;
+
+- 完全恢复成功后，hr用户登录ly，
+$ sqlplus hr/123@202.115.82.8/ly
+SQL> select * from mytable;
+        ID NAME
+---------- --------------------------------------------------
+         4 zhang
+         5 wang
+         6 abc
+
+可见，完全恢复成功，数据是最新的（即2021-04-27 08:03:01），无损失。
+
+
+
+## 选项2：pdb不完全恢复,恢复到update语句之前的状态，即恢复到2021-04-27 08:02:24时刻的数据
+$rman target sys/123@202.115.82.8/orcl:dedicated
+RMAN> restore pluggable database ly;
+RMAN> recover pluggable database ly until time "to_date('2021-04-27 08:02:24','yyyy-mm-dd hh24:mi:ss')" AUXILIARY DESTINATION '/home/student/zwd';
+正在开始介质的恢复
+线程 1 序列 1624 的归档日志已作为文件 /home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/arch1_1624_1064951903.dbf 存在于磁盘上
+线程 1 序列 1625 的归档日志已作为文件 /home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/arch1_1625_1064951903.dbf 存在于磁盘上
+RMAN> alter pluggable database ly open resetlogs;
+已处理语句
+RMAN>exit
+
+- 不完全恢复成功后，hr用户登录ly，
+$ sqlplus hr/123@202.115.82.8/ly
+SQL> select * from mytable;
+        ID NAME
+---------- --------------------------------------------------
+         3 zhang
+         4 wang
+         5 abc
+
+可见，不完全恢复成功，数据回到了修改前的状态（即：2021-04-27 08:02:24）。
+
+```

@@ -748,6 +748,8 @@ configure default device type to disk;
 crosscheck backup;
 crosscheck archivelog all;
 allocate channel c1 device type disk;
+allocate channel c2 device type disk;
+allocate channel c3 device type disk;
 backup as compressed backupset incremental level 0 database format '/home/oracle/rman_backup/dblv0_%d_%T_%U.bak'
    plus archivelog format '/home/oracle/rman_backup/arclv0_%d_%T_%U.bak';
 report obsolete;
@@ -755,6 +757,8 @@ delete noprompt obsolete;
 delete noprompt expired backup;
 delete noprompt expired archivelog all;
 release channel c1;
+release channel c2;
+release channel c3;
 }
 EOF
 
