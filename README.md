@@ -243,7 +243,6 @@ drop table hr.emp_test;
 
 ```
 
-
 ## 从pdborcl创建可插接数据库
 
 新数据库存入：/home/student/pdb/新数据库名称
@@ -259,16 +258,93 @@ show pdbs
 --1.关闭pdborcl
 ALTER PLUGGABLE DATABASE pdborcl CLOSE immediate;
 --或者先切换到pdborcl：
-alter session set container=pdborcl
+alter session set container=pdborcl;
 shutdown immediate
 --切换数据库，回到CDB
-alter session set container=cdb$root
+alter session set container=cdb$root;
 
 --2.只读方式打开pdborcl
 ALTER PLUGGABLE DATABASE pdborcl OPEN READ ONLY;
 
 --3.创建数据库clonedb
-CREATE PLUGGABLE DATABASE clonedb FROM pdborcl file_name_convert=('/home/oracle/app/oracle/oradata/orcl/pdborcl'，'/home/student/pdb/clonedb');
+
+CREATE PLUGGABLE DATABASE clonedb FROM pdborcl file_name_convert=('/home/oracle/app/oracle/oradata/orcl/pdborcl','/home/student/pdb/clonedb');
+
+如果pdborcl创建失败，可以试一下其他pdb:
+
+CREATE PLUGGABLE DATABASE mydb2 FROM rsj file_name_convert=(
+'/home/student/pdb/RSJ/','home/student/pdb/mydb2/')
+
+创建时，如果出现:
+ORA-65005: 文件缺少文件名模式或其文件名模式无效 - /home/oracle/app/oracle/oradata/orcl/pdborcl/temp01.dbf，说明源pdb中的目录比较复杂，不能自动映射，可以：
+先通过：select name,ts#,con_id from v$datafile 查询文件名，手工一一指定文件
+
+CREATE PLUGGABLE DATABASE mydb2 FROM pdborcl file_name_convert=(
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/temp01.dbf','/home/student/pdb/db3/temp01.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/system01.dbf','/home/student/pdb/db3/system01.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/sysaux01.dbf','/home/student/pdb/db3/sysaux01.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/undotbs01.dbf','/home/student/pdb/db3/undotbs01.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/users01.dbf','/home/student/pdb/db3/users01.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_user02_1.dbf','/home/student/pdb/db3/pdbtest_user02_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_user02_2.dbf','/home/student/pdb/db3/pdbtest_user02_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_user03_1.dbf','/home/student/pdb/db3/pdbtest_user03_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_user03_2.dbf','/home/student/pdb/db3/pdbtest_user03_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_1.dbf','/home/student/pdb/db3/pdbtest_users02_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users02_2.dbf','/home/student/pdb/db3/pdbtest_users02_2.dbf',
+'/home/student/rsj/pdbtest_users02_1.dbf','/home/student/pdb/db6/pdbtest_users02_1.dbf',
+'/home/student/rsj/pdbtest_users02_2.dbf','/home/student/pdb/db6/pdbtest_users02_2.dbf',
+'/home/student/cyy/pdbtest_users02_1.dbf','/home/student/pdb/db7/pdbtest_users02_1.dbf',
+'/home/student/cyy/pdbtest_users02_2.dbf','/home/student/pdb/db7/pdbtest_users02_2.dbf',
+'/home/student/lds/pdbtest_users02_1.dbf','/home/student/pdb/db8/pdbtest_users02_1.dbf',
+'/home/student/lds/pdbtest_users02_2.dbf','/home/student/pdb/db8/pdbtest_users02_2.dbf',
+'/home/student/wish/pdbtest_users02_1.dbf','/home/student/pdb/db9/pdbtest_users02_1.dbf',
+'/home/student/wish/pdbtest_users02_2.dbf','/home/student/pdb/db9/pdbtest_users02_2.dbf',
+'/home/student/lqx/pdbtest_users02_1.dbf','/home/student/pdb/db10/pdbtest_users02_1.dbf',
+'/home/student/lqx/pdbtest_users02_2.dbf','/home/student/pdb/db10/pdbtest_users02_2.dbf',
+'/home/student/zzy/pdbtest_users02_1.dbf','/home/student/pdb/db11/pdbtest_users02_1.dbf',
+'/home/student/zzy/pdbtest_users02_2.dbf','/home/student/pdb/db11/pdbtest_users02_2.dbf',
+'/home/student/cx/pdbtest_users02_1.dbf','/home/student/pdb/db12/pdbtest_users02_1.dbf',
+'/home/student/cx/pdbtest_users02_2.dbf','/home/student/pdb/db12/pdbtest_users02_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users1_1.dbf','/home/student/pdb/db3/pdbtest_users1_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users1_2.dbf','/home/student/pdb/db3/pdbtest_users1_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users2_1.dbf','/home/student/pdb/db3/pdbtest_users2_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_users2_2.dbf','/home/student/pdb/db3/pdbtest_users2_2.dbf',
+'/home/student/kyrene/pdbtest_users02_1.dbf','/home/student/pdb/db13/pdbtest_users02_1.dbf',
+'/home/student/kyrene/pdbtest_users02_2.dbf','/home/student/pdb/db13/pdbtest_users02_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/ZXQ_user1.dbf','/home/student/pdb/db3/ZXQ_user1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/ZXQ_user2.dbf','/home/student/pdb/db3/ZXQ_user2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/users02_1.dbf','/home/student/pdb/db4/users02_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/users02_2.dbf','/home/student/pdb/db4/users02_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/users03_1.dbf','/home/student/pdb/db4/users03_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/users03_2.dbf','/home/student/pdb/db4/users03_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/users04_1.dbf','/home/student/pdb/db4/users04_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/users04_2.dbf','/home/student/pdb/db4/users04_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/users05_1.dbf','/home/student/pdb/db4/users05_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/users05_2.dbf','/home/student/pdb/db4/users05_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/hzl_user1_1.dbf','/home/student/pdb/db4/hzl_user1_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/hzl_user1_2.dbf','/home/student/pdb/db4/hzl_user1_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/hzl_user2_1.dbf','/home/student/pdb/db4/hzl_user2_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/hzl_user2_2.dbf','/home/student/pdb/db4/hzl_user2_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/hzl_user3_1.dbf','/home/student/pdb/db4/hzl_user3_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/hzl_user3_2.dbf','/home/student/pdb/db4/hzl_user3_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/hzl_user4_1.dbf','/home/student/pdb/db4/hzl_user4_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/hzl_user4_2.dbf','/home/student/pdb/db4/hzl_user4_2.dbf',
+'/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/zhengshenwen_ data.dbf','/home/student/pdb/db5/zhengshenwen_ data.dbf',
+'/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/qhl001_1.dbf','/home/student/pdb/db5/qhl001_1.dbf',
+'/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/qhl001_2.dbf','/home/student/pdb/db5/qhl001_2.dbf',
+'/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/qhl002_1.dbf','/home/student/pdb/db5/qhl002_1.dbf',
+'/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/qhl002_2.dbf','/home/student/pdb/db5/qhl002_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_MAQIAO1.dbf','/home/student/pdb/db3/pdbtest_MAQIAO1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_MAQIAO2.dbf','/home/student/pdb/db3/pdbtest_MAQIAO2.dbf',
+'/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/gwh_01.dbf ','/home/student/pdb/db5/gwh_01.dbf ',
+'/home/oracle/app/oracle/product/12.2.0/dbhome_1/dbs/gwh_02.dbf ','/home/student/pdb/db5/gwh_02.dbf ',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_U123_1.dbf','/home/student/pdb/db3/pdbtest_U123_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_U123_2.dbf','/home/student/pdb/db3/pdbtest_U123_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_ly001_1.dbf','/home/student/pdb/db3/pdbtest_ly001_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_ly001_2.dbf','/home/student/pdb/db3/pdbtest_ly001_2.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_ly002_1.dbf','/home/student/pdb/db3/pdbtest_ly002_1.dbf',
+'/home/oracle/app/oracle/oradata/orcl/pdborcl/pdbtest_ly002_2.dbf','/home/student/pdb/db3/pdbtest_ly002_2.dbf'
+);
 
 --4.打开新数据库
 ALTER PLUGGABLE DATABASE clonedb OPEN;
@@ -664,7 +740,7 @@ $mv /home/student/pdb_ly/pdbtest_users02_1.dbf  /home/student/pdb_ly/pdbtest_use
 $rman target /
 RMAN> startup mount;
 RMAN> restore database;
-RMAN> recover pluggable;
+RMAN> recover database;
 RMAN> alter database open;
 ```
 
